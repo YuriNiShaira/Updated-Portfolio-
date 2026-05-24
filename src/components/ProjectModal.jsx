@@ -1,11 +1,21 @@
 import React, { useState } from 'react';
 
+// Reuse same image import logic
+const imageModules = import.meta.glob('/src/assets/*.{jpg,jpeg,png}', { eager: true });
+const imageMap = {};
+Object.keys(imageModules).forEach(path => {
+  const filename = path.split('/').pop();
+  imageMap[filename] = imageModules[path].default;
+});
+
 const ProjectModal = ({ project, onClose }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const images = project.images.map(img => `/assets/${img}`);
+  const images = project.images.map(img => imageMap[img]);
 
   const next = () => setCurrentIndex((prev) => (prev + 1) % images.length);
   const prev = () => setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+
+  if (!images.length) return null;
 
   return (
     <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4" onClick={onClose}>
