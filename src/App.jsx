@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useInView } from 'react-intersection-observer';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import About from './components/About';
 import Skills from './components/Skills';
+import Learning from './components/Learning';
 import Projects from './components/Projects';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
@@ -32,9 +34,17 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Scroll animations for each section
+  const [heroRef, heroInView] = useInView({ threshold: 0.1, triggerOnce: true });
+  const [aboutRef, aboutInView] = useInView({ threshold: 0.1, triggerOnce: true });
+  const [skillsRef, skillsInView] = useInView({ threshold: 0.1, triggerOnce: true });
+  const [learningRef, learningInView] = useInView({ threshold: 0.1, triggerOnce: true });
+  const [projectsRef, projectsInView] = useInView({ threshold: 0.1, triggerOnce: true });
+  const [contactRef, contactInView] = useInView({ threshold: 0.1, triggerOnce: true });
+
   return (
     <div className="starry-bg relative min-h-screen">
-      {/* Twinkling stars */}
+      {/* Stars */}
       {stars.map((star, i) => (
         <div
           key={i}
@@ -51,11 +61,26 @@ function App() {
       ))}
 
       <Navbar />
-      <Hero />
-      <About />
-      <Skills />
-      <Projects />
-      <Contact />
+
+      <div ref={heroRef} className={`fade-in ${heroInView ? 'visible' : ''}`}>
+        <Hero />
+      </div>
+      <div ref={aboutRef} className={`fade-in ${aboutInView ? 'visible' : ''}`}>
+        <About />
+      </div>
+      <div ref={skillsRef} className={`fade-in ${skillsInView ? 'visible' : ''}`}>
+        <Skills />
+      </div>
+      <div ref={projectsRef} className={`fade-in ${projectsInView ? 'visible' : ''}`}>
+        <Projects />
+      </div>
+      <div ref={learningRef} className={`fade-in ${learningInView ? 'visible' : ''}`}>
+        <Learning />
+      </div>
+      <div ref={contactRef} className={`fade-in ${contactInView ? 'visible' : ''}`}>
+        <Contact />
+      </div>
+
       <Footer />
       <BackToTop show={showBackToTop} />
     </div>
