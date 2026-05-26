@@ -15,9 +15,9 @@ const projectsData = [
     title: 'LogOfUs',
     desc: 'Multi-tenant SaaS relationship diary for couples to document memories, milestones, and shared experiences together. Designed with strict data isolation and cross-partner syncing mechanics.',
     tech: ['TypeScript', 'React', 'DRF', 'PostgreSQL', 'Supabase', 'JWT', 'Tailwind CSS'],
-    images: ['log1.jpg', 'log2.jpg', 'log3.jpg', 'log4.jpg', 'log5.jpg', 'log6.jpg', 'log7.jpg'],
+    images: ['log.jpg', 'log1.jpg', 'log2.jpg', 'log3.jpg', 'log4.jpg', 'log5.jpg', 'log6.jpg', 'log7.jpg'],
     github: 'https://github.com/YuriNiShaira/logofus',
-    liveDemo: 'https://logofus.vercel.app/',  // 👈 Live demo link added
+    liveDemo: 'https://logofus.vercel.app/',
     features: [
       "Multi-tenant architecture with couple‑based data isolation",
       "JWT authentication with token refresh and secure logout",
