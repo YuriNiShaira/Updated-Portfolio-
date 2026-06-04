@@ -25,7 +25,6 @@ const projectsData = [
       "Shared timeline, bucket list, watchlist, playlist, and couple games",
       "Memory calendar with book‑style",
       "Dark/light mode with animated cherry blossom and starry backgrounds",
-      "Responsive glassmorphism UI",
     ]
   },
   {
