@@ -1,12 +1,35 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
+import emailjs from '@emailjs/browser';
 
 const Contact = () => {
+  const form = useRef();
+  const [status, setStatus] = useState('idle'); // 'idle', 'sending', 'success', 'error'
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    const name = e.target.name.value;
-    const email = e.target.email.value;
-    const message = e.target.message.value;
-    window.location.href = `mailto:yurimauricio0404@gmail.com?subject=Contact from ${name}&body=${message}%0A%0AReply to: ${email}`;
+    setStatus('sending');
+
+    // Using Vite environment variables to keep your keys safe!
+    emailjs.sendForm(
+      import.meta.env.VITE_EMAILJS_SERVICE_ID,
+      import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+      form.current, 
+      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+    )
+    .then((result) => {
+        console.log('SUCCESS!', result.text);
+        setStatus('success');
+        e.target.reset(); // Clear the form fields
+        
+        // Reset the button back to normal after 3 seconds
+        setTimeout(() => setStatus('idle'), 3000);
+    }, (error) => {
+        console.log('FAILED...', error.text);
+        setStatus('error');
+        
+        // Reset the button back to normal after 3 seconds
+        setTimeout(() => setStatus('idle'), 3000);
+    });
   };
 
   return (
@@ -87,10 +110,23 @@ const Contact = () => {
           </div>
 
           {/* Contact Form Panel */}
-          <div className="bg-[#0B1B2E]/40 backdrop-blur-md border border-[#00E5FF]/20 border-t-2 border-t-[#00E5FF] rounded-sm p-8 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+          <div className="bg-[#0B1B2E]/40 backdrop-blur-md border border-[#00E5FF]/20 border-t-2 border-t-[#00E5FF] rounded-sm p-8 shadow-[0_10px_30px_rgba(0,0,0,0.5)] relative overflow-hidden">
+            
+            {/* Success Overlay */}
+            <div className={`absolute inset-0 bg-[#030712]/95 z-20 flex flex-col items-center justify-center transition-all duration-500 ${status === 'success' ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
+              <svg className="w-16 h-16 text-[#00ff41] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <h3 className="text-[#00ff41] text-xl font-mono tracking-widest uppercase text-center">Transmission<br/>Successful</h3>
+            </div>
+
+            {/* Error Overlay */}
+            <div className={`absolute inset-0 bg-[#030712]/95 z-20 flex flex-col items-center justify-center transition-all duration-500 ${status === 'error' ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
+              <svg className="w-16 h-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <h3 className="text-red-500 text-xl font-mono tracking-widest uppercase text-center">Connection<br/>Failed</h3>
+            </div>
+
             <h3 className="text-xl font-semibold text-white tracking-wide mb-6">Send a Message</h3>
             
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form ref={form} onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="name" className="block text-xs font-mono tracking-widest uppercase text-gray-400 mb-2">Name</label>
                 <input 
@@ -124,12 +160,30 @@ const Contact = () => {
                   required
                 ></textarea>
               </div>
+              
               <button 
                 type="submit" 
-                className="w-full px-6 py-4 bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF] font-semibold tracking-widest uppercase text-sm rounded-sm hover:bg-[#00E5FF] hover:text-[#030712] transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] flex justify-center items-center gap-2 group"
+                disabled={status === 'sending'}
+                className={`w-full px-6 py-4 border font-semibold tracking-widest uppercase text-sm rounded-sm transition-all duration-300 flex justify-center items-center gap-2 group ${
+                  status === 'sending' 
+                    ? 'bg-[#00E5FF]/20 text-[#00E5FF] border-[#00E5FF]/50 cursor-not-allowed'
+                    : 'bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF] hover:bg-[#00E5FF] hover:text-[#030712] hover:shadow-[0_0_20px_rgba(0,229,255,0.4)]'
+                }`}
               >
-                Transmit Message
-                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                {status === 'sending' ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-[#00E5FF]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Transmitting...
+                  </>
+                ) : (
+                  <>
+                    Transmit Message
+                    <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                  </>
+                )}
               </button>
             </form>
           </div>
