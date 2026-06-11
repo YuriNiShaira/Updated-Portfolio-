@@ -3,8 +3,8 @@ import React from 'react';
 const Learning = () => {
   const currentlyLearning = [
     { 
-      name: 'Linux', 
-      description: 'Learning terminal commands, server navigation, and understanding Linux environments.' 
+      name: 'Automation & Scripting', 
+      description: 'Exploring Python scripting for automating tasks and improving efficiency.' 
     },
     { 
       name: 'System Design', 
