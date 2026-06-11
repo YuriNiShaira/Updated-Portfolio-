@@ -20,16 +20,16 @@ function App() {
     };
     window.addEventListener('scroll', handleScroll);
 
-    // Generate random stars
-    const starCount = 200;
-    const newStars = Array.from({ length: starCount }, () => ({
+    // Generate fewer, more deliberate "Data Nodes" instead of stars
+    const nodeCount = 40;
+    const newNodes = Array.from({ length: nodeCount }, () => ({
       left: Math.random() * 100,
       top: Math.random() * 100,
-      size: Math.random() * 3 + 1,
-      duration: Math.random() * 5 + 2,
+      size: Math.random() * 2 + 1, // Smaller, sharper dots
+      duration: Math.random() * 4 + 3,
       delay: Math.random() * 5,
     }));
-    setStars(newStars);
+    setStars(newNodes);
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -44,18 +44,22 @@ function App() {
 
   return (
     <div className="starry-bg relative min-h-screen">
-      {/* Stars */}
-      {stars.map((star, i) => (
+      
+      {/* CSS Grid Overlay for a HUD feel */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(0,229,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,229,255,0.03)_1px,transparent_1px)] bg-[size:50px_50px] pointer-events-none z-0"></div>
+
+      {/* Render Data Nodes - ADDED 'absolute', 'rounded-full', and 'bg-[#00E5FF]' */}
+      {stars.map((node, i) => (
         <div
           key={i}
-          className="star"
+          className="data-node absolute rounded-full bg-[#00E5FF]"
           style={{
-            left: `${star.left}%`,
-            top: `${star.top}%`,
-            width: `${star.size}px`,
-            height: `${star.size}px`,
-            animationDuration: `${star.duration}s`,
-            animationDelay: `${star.delay}s`,
+            left: `${node.left}%`,
+            top: `${node.top}%`,
+            width: `${node.size}px`,
+            height: `${node.size}px`,
+            animationDuration: `${node.duration}s`,
+            animationDelay: `${node.delay}s`,
           }}
         />
       ))}
