@@ -78,9 +78,9 @@ const About = () => {
                 Current Focus
               </h4>
               <ul className="space-y-3 text-gray-400 font-light text-sm">
-                <li className="flex items-center"><span className="text-[#00E5FF] mr-3">▹</span> API Development & Architecture</li>
+                <li className="flex items-center"><span className="text-[#00E5FF] mr-3">▹</span> Web Development</li>
                 <li className="flex items-center"><span className="text-[#00E5FF] mr-3">▹</span> Advanced Web Technologies</li>
-                <li className="flex items-center"><span className="text-[#00E5FF] mr-3">▹</span> Complex Problem Solving</li>
+                <li className="flex items-center"><span className="text-[#00E5FF] mr-3">▹</span> Automation</li>
               </ul>
             </div>
 
@@ -91,7 +91,7 @@ const About = () => {
                 Target Roles
               </h4>
               <p className="text-gray-400 font-light text-sm leading-relaxed">
-                Open to backend and full-stack opportunities where I can contribute to building secure, highly scalable systems.
+                Open to entry-level opportunities where I can contribute to building secure, highly scalable systems.
               </p>
             </div>
 
