@@ -145,24 +145,37 @@ const Projects = () => {
                 className={`flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} gap-8 md:gap-16 items-center group`}
               >
                 
-                {/* --- IMAGE BLOCK --- */}
-                <div className="w-full md:w-1/2 relative">
+                {/* --- IMAGE BLOCK WITH HUD FRAME --- */}
+                <div className="w-full md:w-1/2 relative p-2 md:p-3">
+                  
+                  {/* Animating HUD Targeting Brackets */}
+                  <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#00E5FF]/30 group-hover:border-[#00E5FF] group-hover:-translate-x-1 group-hover:-translate-y-1 transition-all duration-300 z-20 pointer-events-none"></div>
+                  <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#00E5FF]/30 group-hover:border-[#00E5FF] group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300 z-20 pointer-events-none"></div>
+                  <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#00E5FF]/30 group-hover:border-[#00E5FF] group-hover:-translate-x-1 group-hover:translate-y-1 transition-all duration-300 z-20 pointer-events-none"></div>
+                  <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#00E5FF]/30 group-hover:border-[#00E5FF] group-hover:translate-x-1 group-hover:translate-y-1 transition-all duration-300 z-20 pointer-events-none"></div>
+
                   <div 
                     onClick={() => setSelectedProject(proj)}
-                    className="relative block rounded-sm overflow-hidden bg-[#0B1B2E]/50 border border-[#00E5FF]/20 shadow-[0_0_15px_rgba(0,0,0,0.5)] cursor-pointer group-hover:border-[#00E5FF]/60 group-hover:shadow-[0_0_30px_rgba(0,229,255,0.15)] transition-all duration-500 aspect-[16/10]"
+                    className="relative block rounded-sm overflow-hidden bg-[#0B1B2E] shadow-[0_0_15px_rgba(0,0,0,0.5)] cursor-pointer group-hover:shadow-[0_0_30px_rgba(0,229,255,0.2)] transition-all duration-500 aspect-[16/10] z-10"
                   >
                     {/* Fallback text */}
                     <div className="absolute inset-0 flex items-center justify-center text-gray-600 font-bold tracking-wider uppercase text-sm">
                       Preview Not Available
                     </div>
+                    
                     <img 
                       src={imageMap[proj.images[0]]} 
                       alt={proj.title} 
-                      className="absolute inset-0 w-full h-full object-cover opacity-80 transition-transform duration-700 ease-out group-hover:scale-[1.03] group-hover:opacity-100" 
+                      className="absolute inset-0 w-full h-full object-cover opacity-80 transition-transform duration-700 ease-out group-hover:scale-[1.05] group-hover:opacity-100" 
                     />
-                    {/* Hover overlay */}
+                    
+                    {/* Scanning Grid & Hover overlay */}
                     <div className="absolute inset-0 bg-[#030712]/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 flex items-center justify-center backdrop-blur-[2px]">
-                      <span className="bg-[#00E5FF]/10 border border-[#00E5FF] text-[#00E5FF] px-5 py-2.5 rounded-sm text-xs font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(0,229,255,0.3)] flex items-center gap-2 transform translate-y-3 group-hover:translate-y-0 transition-all duration-300">
+                      
+                      {/* Subtle CSS Scanline Effect */}
+                      <div className="absolute inset-0 bg-[linear-gradient(rgba(0,229,255,0.05)_1px,transparent_1px)] bg-[size:100%_4px] pointer-events-none"></div>
+                      
+                      <span className="bg-[#00E5FF]/10 border border-[#00E5FF] text-[#00E5FF] px-5 py-2.5 rounded-sm text-xs font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(0,229,255,0.3)] flex items-center gap-2 transform translate-y-3 group-hover:translate-y-0 transition-all duration-300 relative z-30">
                         View Screenshots
                       </span>
                     </div>
@@ -171,7 +184,8 @@ const Projects = () => {
 
                 {/* --- CONTENT BLOCK --- */}
                 <div className="w-full md:w-1/2 flex flex-col justify-center">
-                  <span className="text-[#00E5FF] font-mono text-xs font-medium tracking-widest uppercase mb-3">
+                  <span className="text-[#00E5FF] font-mono text-xs font-medium tracking-widest uppercase mb-3 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-[#00E5FF] rounded-full animate-pulse"></span>
                     Project // 0{proj.id}
                   </span>
                   <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 tracking-tight group-hover:text-[#00E5FF] transition-colors duration-300">
