@@ -51,12 +51,12 @@ const Skills = () => {
             <span className="w-12 h-[1px] bg-[#00E5FF]/50"></span>
           </div>
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white drop-shadow-md">
-            Technical <span className="text-[#00E5FF]">Arsenal</span>
+            Technical <span className="text-[#00E5FF]">Stack</span>
           </h2>
         </div>
 
         <p className="text-gray-400 font-light text-center mb-16 max-w-2xl mx-auto">
-          Technologies and systems initialized during academic training and independent project development.
+          Tech Stack I use to build web applications.I specialize in Python-based backend development and modern frontend frameworks. I'm always eager to learn new tools and stay up-to-date with the latest trends in web development.
         </p>
 
         {/* Stack of Categories */}
