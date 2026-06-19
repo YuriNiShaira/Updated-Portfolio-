@@ -32,7 +32,7 @@ const projectsData = [
     title: 'GitInsight',
     desc: 'A GitHub Analytics Dashboard that visualizes developer activity, contribution patterns, and repository insights. Built with a hybrid GraphQL + REST architecture for accurate commit tracking.',
     tech: ['React', 'Django', 'DRF', 'GraphQL', 'PostgreSQL', 'Redis', 'Tailwind CSS', 'Docker'],
-    images: ['gitinsight1.jpg', 'gitinsight2.jpg',],
+    images: ['gitinsight1.jpg', 'gitinsight2.jpg', 'gitinsight3.jpg'],
     github: 'https://github.com/YuriNiShaira/Github-Analytics',
     liveDemo: 'https://github-analytics-7dkv.vercel.app/',
     features: [
