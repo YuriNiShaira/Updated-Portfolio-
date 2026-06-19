@@ -29,9 +29,27 @@ const projectsData = [
   },
   {
     id: 2,
+    title: 'GitInsight',
+    desc: 'A GitHub Analytics Dashboard that visualizes developer activity, contribution patterns, and repository insights. Built with a hybrid GraphQL + REST architecture for accurate commit tracking.',
+    tech: ['React', 'Django', 'DRF', 'GraphQL', 'PostgreSQL', 'Redis', 'Tailwind CSS', 'Docker'],
+    images: ['gitinsight1.jpg', 'gitinsight2.jpg',],
+    github: 'https://github.com/YuriNiShaira/Github-Analytics',
+    liveDemo: 'https://github-analytics-7dkv.vercel.app/',
+    features: [
+      'Contribution tracking via GitHub GraphQL API',
+      'Activity timeline with push event analysis',
+      'Language distribution with interactive pie charts',
+      'User comparison and developer benchmarking',
+      'Export analytics reports to PDF',
+      'Redis‑powered caching for fast response times',
+      'Dark/light mode with persistent user preference'
+    ]
+  },
+  {
+    id: 3,
     title: 'Queuick',
     desc: 'A real-time queue management system optimized for institutional environments. Deployed and battle-tested in a live school ecosystem to streamline registrar and student service window performance.',
-    tech: ['TypeScript', 'React', 'Django', 'DRF', 'PostgreSQL', 'WebSockets'],
+    tech: ['TypeScript', 'React', 'Django', 'DRF', 'PostgreSQL', 'WebSockets', 'Docker'],
     images: ['queuick.jpg', 'queuick1.jpg', 'queuick2.jpg', 'queuick3.jpg', 'queuick5.jpg', 'queuick6.jpg', 'queuick7.jpg', 'queuick8.jpg', 'queuick10.jpg', 'queuick11.jpg', 'queuick12.jpg', 'queuick13.jpg', 'queuick14.jpg', 'queuick15.jpg',],
     github: 'https://github.com/YuriNiShaira/queue-django-api',
     features: [
@@ -46,7 +64,7 @@ const projectsData = [
     ]
   },
   {
-    id: 3,
+    id: 4,
     title: 'OJTrack',
     desc: 'A dedicated three-tier matching system connecting students looking for critical apprenticeship opportunities directly with authenticated corporate partners.',
     tech: ['Django', 'DRF', 'SQLite', 'React', 'ChakraUI'],
@@ -59,7 +77,7 @@ const projectsData = [
     ]
   },
   {
-    id: 4,
+    id: 5,
     title: 'Social Web',
     desc: 'A social media platform for developer communities with real‑time messaging, posts, likes, and comment threads.',
     tech: ['React', 'Django', 'DRF', 'ChakraUI'],
@@ -71,7 +89,7 @@ const projectsData = [
     ]
   },
   {
-    id: 5,
+    id: 6,
     title: 'Chatroom',
     desc: 'A lightweight AJAX‑powered chatroom that enables real‑time messaging without full page reloads.',
     tech: ['Django', 'HTML', 'SQLite', 'JavaScript', 'AJAX'],
@@ -84,7 +102,7 @@ const projectsData = [
     ]
   },
   {
-    id: 6,
+    id: 7,
     title: 'E‑Commerce',
     desc: 'A full‑featured online store with product catalog, shopping cart, order management, and mock payment integration.',
     tech: ['Django', 'DRF', 'PostgreSQL', 'Stripe', 'Redis'],
@@ -98,7 +116,7 @@ const projectsData = [
     ]
   },
   {
-    id: 7,
+    id: 8,
     title: 'To‑do List App',
     desc: 'A feature‑rich desktop task manager built with PyQt5 – add, complete, search, and persist tasks locally.',
     tech: ['Python', 'PyQt5', 'CSS'],
