@@ -26,7 +26,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('adminToken'));
 
   useEffect(() => {
-    // Initialize analytics for public pages
+    // Initialize analytics for public page
     analytics.init();
 
     const handleScroll = () => {
