@@ -104,7 +104,7 @@ const Contact = () => {
               </div>
               <div>
                 <p className="text-xs tracking-widest uppercase text-gray-500 mb-1">Instagram</p>
-                <a href="https://www.instagram.com/yurinishaira/" target="_blank" rel="noreferrer" className="text-gray-300 font-light hover:text-[#00E5FF] transition-colors">@yurinishaira</a>
+                <a href="https://www.instagram.com/yuriii.py/" target="_blank" rel="noreferrer" className="text-gray-300 font-light hover:text-[#00E5FF] transition-colors">@yurinishaira</a>
               </div>
             </div>
           </div>

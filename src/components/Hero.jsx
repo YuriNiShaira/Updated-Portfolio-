@@ -28,7 +28,7 @@ const Hero = () => {
         {/* Name */}
         <h1 className="text-5xl md:text-7xl font-bold mb-4 flex flex-wrap justify-center gap-3 md:gap-5 tracking-tight">
           <span className="text-[#00E5FF] inline-block hover:scale-105 transition-transform duration-300 cursor-default drop-shadow-[0_0_15px_rgba(0,229,255,0.4)]">
-            Yuri
+            Yurisho
           </span>
           <span className="text-white inline-block hover:scale-105 transition-transform duration-300 cursor-default">
             Mauricio
@@ -38,7 +38,7 @@ const Hero = () => {
         {/* Your Original Quote */}
         <div className="h-20 mb-6 flex items-center justify-center">
           <h2 className="text-2xl md:text-3xl text-gray-400 font-light flex items-center justify-center gap-2">
-            <span>Still learning. Always building. Never settling.</span>
+            <span>Build. Learn. Repeat.</span>
             <span className="animate-wave inline-block ml-2 text-[#00E5FF]">😽</span>
           </h2>
         </div>
