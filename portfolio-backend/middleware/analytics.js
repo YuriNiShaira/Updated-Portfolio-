@@ -7,64 +7,55 @@ const hashIP = (ip) => {
   return crypto.createHash('sha256').update(ip + process.env.IP_SALT).digest('hex');
 };
 
-// Get or create session ID
-const getSessionId = (req, res) => {
-  let sessionId = req.body?.sessionId || req.cookies?.analytics_session;
-  
-  if (!sessionId) {
-    sessionId = crypto.randomUUID();
-    res.cookie('analytics_session', sessionId, {
-      maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', 
-      secure: process.env.NODE_ENV === 'production',
-    });
-  }
-  return sessionId;
-};
-
 // Main tracking middleware
 exports.trackVisitor = async (req, res, next) => {
-  const skippedRoutes = ['/api/auth', '/api/health', '/api/analytics'];
-  
-  if (skippedRoutes.some(route => req.path.startsWith(route))) {
+  if (!req.path.includes('/track-event')) {
     return next();
+  }
+
+  if (req.body.eventType !== 'page_view') {
+    return next(); 
   }
 
   // Skip bots
   const userAgent = req.headers['user-agent'] || '';
-  const botPatterns = /bot|crawler|spider|scraper|headless/i;
+  const botPatterns = /bot|crawler|spider|scraper|headless|vercel|aws|google|bing|yandex|slurp|duckduckgo|lighthouse|postman/i;
+  
   if (botPatterns.test(userAgent)) {
     return next();
   }
 
   try {
-    const sessionId = getSessionId(req, res);
+    const sessionId = req.body.sessionId || req.cookies?.analytics_session;
+    if (!sessionId) return next();
+
     const ip = req.ip || req.connection.remoteAddress || '0.0.0.0';
     const ipHash = hashIP(ip);
-
-    // Parse user agent
+    
     const parser = new UAParser(userAgent);
     const uaResult = parser.getResult();
 
-    // Check for existing visit in last 30 seconds
+    const actualPage = req.body.target || '/';
+
     const existingVisit = await Visitor.findOne({
       sessionId,
-      'page.path': req.path,
-    }).sort({ timestamp: -1 }).limit(1);
+      'page.path': actualPage,
+    }).sort({ createdAt: -1 }).limit(1);
 
     if (existingVisit) {
-      const timeDiff = Date.now() - existingVisit.timestamp;
-      if (timeDiff < 30000) {
+      const timeDiff = Date.now() - existingVisit.createdAt;
+      
+      if (timeDiff < 1800000) {
         await Visitor.updateOne(
           { _id: existingVisit._id },
           {
             $inc: {
               'engagement.clicks': 1,
-              'engagement.timeOnPage': 30,
+              'engagement.timeOnPage': 5,
             },
           }
         );
+        req.existingVisitorId = existingVisit._id; 
         return next();
       }
     }
@@ -86,10 +77,9 @@ exports.trackVisitor = async (req, res, next) => {
         timezone: 'Unknown',
       },
       page: {
-        path: req.path,
+        path: actualPage,
         title: req.headers['page-title'] || 'Portfolio',
         referrer: req.headers.referer || 'direct',
-        query: JSON.stringify(req.query),
       },
       engagement: {
         timeOnPage: 0,
@@ -97,14 +87,14 @@ exports.trackVisitor = async (req, res, next) => {
         clicks: 0,
       },
       events: [],
-      timestamp: new Date(),
     };
 
-    await Visitor.create(visitorData);
+    const newVisitor = await Visitor.create(visitorData);
+    req.existingVisitorId = newVisitor._id;
     next();
   } catch (error) {
     console.error('Analytics error:', error);
-    next(); // Don't break the app if analytics fails
+    next(); 
   }
 };
 
@@ -112,42 +102,33 @@ exports.trackVisitor = async (req, res, next) => {
 exports.trackEvent = async (req, res) => {
   try {
     const { eventType, target, sessionId: bodySessionId } = req.body;
-    
-    // ✅ FIXED: Prioritize the frontend's localStorage ID to bypass mobile cookie blocks
     const sessionId = bodySessionId || req.cookies?.analytics_session;
 
     if (!sessionId) {
       return res.status(400).json({ message: 'No session found' });
     }
 
-    // Find the latest visitor record
-    let visitor = await Visitor.findOne({ sessionId }).sort({ timestamp: -1 });
-
-    if (!visitor) {
-      // Create a new visitor if none exists
-      visitor = new Visitor({
-        sessionId,
-        ipHash: 'anonymous',
-        device: { browser: 'Unknown', os: 'Unknown', deviceType: 'Unknown' },
-        page: { path: req.headers.referer || '/', title: 'Unknown' },
-        events: []
-      });
-      await visitor.save();
+    let visitorId = req.existingVisitorId;
+    
+    if (!visitorId) {
+      const latestVisitor = await Visitor.findOne({ sessionId }).sort({ createdAt: -1 });
+      if (latestVisitor) visitorId = latestVisitor._id;
     }
 
-    // Push the event using updateOne for safety
-    await Visitor.updateOne(
-      { _id: visitor._id },
-      {
-        $push: {
-          events: {
-            type: eventType,
-            target: target,
-            timestamp: new Date()
+    if (visitorId) {
+      await Visitor.updateOne(
+        { _id: visitorId },
+        {
+          $push: {
+            events: {
+              type: eventType,
+              target: target,
+              eventDate: new Date()
+            }
           }
         }
-      }
-    );
+      );
+    }
 
     res.json({ success: true });
   } catch (error) {
