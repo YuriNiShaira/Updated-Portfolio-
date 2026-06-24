@@ -35,7 +35,6 @@ const Dashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // REMOVED page-analytics from the fetch calls
       const [statsRes, dailyRes, projectRes, socialRes, visitorsRes] = await Promise.all([
         axiosInstance.get('/analytics/stats'),
         axiosInstance.get('/analytics/daily-visitors?days=30'),
