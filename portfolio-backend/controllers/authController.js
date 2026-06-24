@@ -6,9 +6,9 @@ exports.setupAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const adminExists = await Admin.findOne({ email });
-    if (adminExists) {
-      return res.status(400).json({ message: 'Admin already exists' });
+    const adminCount = await Admin.countDocuments();
+    if (adminCount > 0) {
+      return res.status(403).json({ message: 'Setup locked: An admin account already exists.' });
     }
 
     const admin = await Admin.create({ email, password });
