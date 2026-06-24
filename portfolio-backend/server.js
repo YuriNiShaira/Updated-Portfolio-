@@ -13,10 +13,26 @@ connectDB();
 
 const app = express();
 
+app.set('trust proxy', 1);
+
+// Allowed origins for CORS
+const allowedOrigins = [
+  'http://localhost:3000', 
+  'http://localhost:5173', 
+  'https://portfolioniyurisho.vercel.app'
+];
+
 // Middleware
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'http://localhost:5173', 'https://portfolioniyurisho.vercel.app'],
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
