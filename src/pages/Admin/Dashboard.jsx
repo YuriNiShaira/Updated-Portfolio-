@@ -15,7 +15,6 @@ import {
   Bar,
   Legend
 } from 'recharts';
-import ProjectStats from './ProjectStats';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -215,11 +214,6 @@ const Dashboard = () => {
               <Line type="monotone" name="Unique Visitors" dataKey="uniqueVisitors" stroke="#00E676" strokeWidth={2.5} dot={false} activeDot={{ r: 6 }} />
             </LineChart>
           </ResponsiveContainer>
-        </div>
-
-        {/* Project Stats Component */}
-        <div>
-          <ProjectStats />
         </div>
 
         {/* Analytical Breakdown Deep Dive section */}
