@@ -12,6 +12,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import ProjectStats from './ProjectStats';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -156,6 +157,11 @@ const Dashboard = () => {
               </LineChart>
             </ResponsiveContainer>
           </div>
+        </div>
+
+        {/* Project Stats Component */}
+        <div className="grid grid-cols-1 gap-6 mb-8">
+          <ProjectStats />
         </div>
 
         {/* Bottom Row */}

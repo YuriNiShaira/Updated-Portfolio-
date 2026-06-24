@@ -179,6 +179,23 @@ class AnalyticsService {
     console.log('🔗 Link click:', linkName);
     this.trackEvent('link_click', linkName);
   }
+
+  trackProjectGalleryView(projectTitle) {
+    console.log('📁 Project gallery view:', projectTitle);
+    this.trackEvent('project_gallery_view', projectTitle);
+  }
+
+  // Track project GitHub click
+  trackProjectGitHubClick(projectTitle) {
+    console.log('🐙 Project GitHub click:', projectTitle);
+    this.trackEvent('project_github_click', projectTitle);
+  }
+
+  // Track project Live Demo click
+  trackProjectLiveDemoClick(projectTitle) {
+    console.log('🚀 Project Live Demo click:', projectTitle);
+    this.trackEvent('project_live_demo_click', projectTitle);
+  }
 }
 
 // Singleton instance

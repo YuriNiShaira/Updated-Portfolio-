@@ -179,32 +179,16 @@ const Projects = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleNext, handlePrev]);
 
-  // Track project view when card is clicked
+  // Track project gallery view when card is clicked
   const handleCardClick = (index, isCenter, proj) => {
     if (isCenter) {
       // Open the modal
       setSelectedProject(proj);
       
-      // TRACK THE PROJECT VIEW
-      console.log(`📊 Tracking project view: ${proj.title}`);
+      // ✅ TRACK GALLERY VIEW
+      analytics.trackProjectGalleryView(proj.title);
       
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://backend-portfolio-wamf.onrender.com/api';
-      
-      fetch(`${apiUrl}/track-event`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // CRITICAL for cross-domain cookie tracking
-        body: JSON.stringify({
-          eventType: 'project_view',
-          target: proj.title
-        })
-      })
-      .then(response => response.json())
-      .then(data => console.log('✅ Project view tracked:', data))
-      .catch(err => console.error('❌ Tracking failed:', err));
-
+      console.log(`📊 Tracking gallery view: ${proj.title}`);
     } else {
       // Navigate to that project in the carousel
       setCurrentIndex(index);
@@ -348,16 +332,17 @@ const Projects = () => {
                       ))}
                     </div>
 
-                    {/* Operational Controls */}
+                    {/* Operational Controls - UPDATED WITH TRACKING */}
                     <div className="flex items-center gap-5 mt-auto">
+                      {/* GitHub Button */}
                       <a 
                         href={proj.github} 
                         onClick={(e) => {
-                          e.preventDefault(); // Stop mobile browsers from getting confused by the tap
-                          e.stopPropagation(); // Stop the project modal from opening
+                          e.preventDefault();
+                          e.stopPropagation();
                           
-                          // 📊 Track the click in your analytics dashboard!
-                          analytics.trackEvent('link_click', `${proj.title} - GitHub`); 
+                          // ✅ TRACK GITHUB CLICK
+                          analytics.trackProjectGitHubClick(proj.title);
                           
                           // Open the link safely
                           window.open(proj.github, '_blank', 'noopener,noreferrer');
@@ -370,6 +355,7 @@ const Projects = () => {
                         Code
                       </a>
                       
+                      {/* Live Demo Button */}
                       {proj.liveDemo && (
                         <a 
                           href={proj.liveDemo} 
@@ -377,10 +363,10 @@ const Projects = () => {
                             e.preventDefault();
                             e.stopPropagation();
                             
-                            // 📊 Track the click in your analytics dashboard!
-                            analytics.trackEvent('link_click', `${proj.title} - Live Demo`);
+                            // ✅ TRACK LIVE DEMO CLICK
+                            analytics.trackProjectLiveDemoClick(proj.title);
                             
-                            window.open(proj.liveDemo, '_blank', 'noopener,noreferrer');
+                            window.open(proj.liveDemo, '_blank', 'noopener','noreferrer');
                           }}
                           className="flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-3.5 bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF] hover:bg-[#00E5FF] hover:text-[#020611] rounded text-xs md:text-sm font-bold tracking-widest uppercase transition-all duration-300"
                         >
