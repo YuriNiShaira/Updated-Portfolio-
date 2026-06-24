@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ProjectModal from './ProjectModal';
-import analytics from '../utils/analytics'; // Import analytics - adjust path as needed
+import analytics from '../services/analytics';
 
 // Import all images from src/assets
 const imageModules = import.meta.glob('/src/assets/*.{jpg,jpeg,png}', { eager: true });
