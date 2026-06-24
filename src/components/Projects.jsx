@@ -50,7 +50,7 @@ const projectsData = [
     title: 'Queuick',
     desc: 'A real-time queue management system optimized for institutional environments. Deployed and battle-tested in a live school ecosystem to streamline registrar and student service window performance.',
     tech: ['TypeScript', 'React', 'Django', 'DRF', 'PostgreSQL', 'WebSockets', 'Docker'],
-    images: ['queuick.jpg', 'queuick1.jpg', 'queuick2.jpg', 'queuick3.jpg', 'queuick5.jpg', 'queuick6.jpg', 'queuick7.jpg', 'queuick8.jpg', 'queuick10.jpg', 'queuick11.jpg', 'queuick12.jpg', 'queuick13.jpg', 'queuick14.jpg', 'queuick15.jpg',],
+    images: ['queuick.jpg', 'queuick1.jpg', 'queuick2.jpg', 'queuick3.jpg', 'queuick5.jpg', 'queuick6.jpg', 'queuick7.jpg', 'queuick8.jpg', 'queuick10.jpg', 'queuick11.jpg', 'queuick12.jpg', 'queuick13.jpg', 'queuick14.jpg', 'queuick15.jpg'],
     github: 'https://github.com/YuriNiShaira/queue-django-api',
     features: [
       'Real-time bi-directional queue updates powered by WebSockets',
@@ -58,13 +58,29 @@ const projectsData = [
       'Automated SMS notifications for queue status updates',
       'Comprehensive analytics dashboard with CSV/PDF export for service performance',
       'Multi-counter / multi-service queue management system',
-      'staff panel with full control over queue flow (call, skip, reset, delete)',
+      'Staff panel with full control over queue flow (call, skip, reset, delete)',
       'Live display screen for public queue monitoring',
       'Mobile-responsive interface for users and staff',
     ]
   },
   {
     id: 4,
+    title: 'Portfolio Analytics',
+    desc: 'A full-stack MERN analytics dashboard that tracks real-time visitor data, project views, and engagement metrics for my developer portfolio. Built with MongoDB, Express, React, and Node.js.',
+    tech: ['React', 'Node.js', 'Express', 'MongoDB', 'Mongoose', 'JWT', 'Recharts', 'Tailwind CSS'],
+    images: ['analytics1.jpg', 'analytics2.jpg', 'analytics3.jpg', 'analytics4.jpg', 'analytics5.jpg'],
+    github: 'https://github.com/YuriNiShaira/portfolio-analytics',
+    liveDemo: 'https://portfolioniyurisho.vercel.app',
+    features: [
+      'Real-time visitor tracking with anonymous session management',
+      'Interactive data visualizations using Recharts (daily visitors, page views)',
+      'Event tracking for project views, resume downloads, and social media clicks',
+      'MongoDB aggregation pipelines for analytics processing',
+      'Full-stack MERN deployment on Vercel + Render'
+    ]
+  },
+  {
+    id: 5,
     title: 'OJTrack',
     desc: 'A dedicated three-tier matching system connecting students looking for critical apprenticeship opportunities directly with authenticated corporate partners.',
     tech: ['Django', 'DRF', 'SQLite', 'React', 'ChakraUI'],
@@ -77,7 +93,7 @@ const projectsData = [
     ]
   },
   {
-    id: 5,
+    id: 6,
     title: 'Social Web',
     desc: 'A social media platform for developer communities with real‑time messaging, posts, likes, and comment threads.',
     tech: ['React', 'Django', 'DRF', 'ChakraUI'],
@@ -89,7 +105,7 @@ const projectsData = [
     ]
   },
   {
-    id: 6,
+    id: 7,
     title: 'Chatroom',
     desc: 'A lightweight AJAX‑powered chatroom that enables real‑time messaging without full page reloads.',
     tech: ['Django', 'HTML', 'SQLite', 'JavaScript', 'AJAX'],
@@ -102,7 +118,7 @@ const projectsData = [
     ]
   },
   {
-    id: 7,
+    id: 8,
     title: 'E‑Commerce',
     desc: 'A full‑featured online store with product catalog, shopping cart, order management, and mock payment integration.',
     tech: ['Django', 'DRF', 'PostgreSQL', 'Stripe', 'Redis'],
@@ -116,7 +132,7 @@ const projectsData = [
     ]
   },
   {
-    id: 8,
+    id: 9,
     title: 'To‑do List App',
     desc: 'A feature‑rich desktop task manager built with PyQt5 – add, complete, search, and persist tasks locally.',
     tech: ['Python', 'PyQt5', 'CSS'],
@@ -136,7 +152,6 @@ const Projects = () => {
 
   const numProjects = projectsData.length;
 
-  // Wrapped in useCallback so they can be safely used in useEffect
   const handleNext = useCallback((e) => {
     if (e) e.stopPropagation();
     setCurrentIndex((prev) => (prev + 1) % numProjects);
@@ -150,7 +165,6 @@ const Projects = () => {
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Don't trigger if user is typing in an input field elsewhere on the page
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       
       if (e.key === 'ArrowRight') {
@@ -161,15 +175,37 @@ const Projects = () => {
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    
-    // Cleanup listener on unmount
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleNext, handlePrev]);
 
+  // Track project view when card is clicked
   const handleCardClick = (index, isCenter, proj) => {
     if (isCenter) {
+      // Open the modal
       setSelectedProject(proj);
+      
+      // TRACK THE PROJECT VIEW
+      console.log(`📊 Tracking project view: ${proj.title}`);
+      
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://backend-portfolio-wamf.onrender.com/api';
+      
+      fetch(`${apiUrl}/track-event`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // CRITICAL for cross-domain cookie tracking
+        body: JSON.stringify({
+          eventType: 'project_view',
+          target: proj.title
+        })
+      })
+      .then(response => response.json())
+      .then(data => console.log('✅ Project view tracked:', data))
+      .catch(err => console.error('❌ Tracking failed:', err));
+
     } else {
+      // Navigate to that project in the carousel
       setCurrentIndex(index);
     }
   };
@@ -178,16 +214,12 @@ const Projects = () => {
     const diff = (index - currentIndex + numProjects) % numProjects;
 
     if (diff === 0) {
-      // CENTER: Active Project
       return "translate-x-0 scale-100 z-40 opacity-100 pointer-events-auto blur-0";
     } else if (diff === 1 || diff === -(numProjects - 1)) {
-      // RIGHT: Next Project
       return "translate-x-[90%] md:translate-x-[110%] scale-[0.80] z-30 opacity-20 hover:opacity-60 blur-[3px] hover:blur-none cursor-pointer";
     } else if (diff === numProjects - 1 || diff === -1) {
-      // LEFT: Previous Project
       return "-translate-x-[90%] md:-translate-x-[110%] scale-[0.80] z-30 opacity-20 hover:opacity-60 blur-[3px] hover:blur-none cursor-pointer";
     } else {
-      // HIDDEN: Back of the stack
       return "translate-x-0 scale-[0.60] z-10 opacity-0 pointer-events-none blur-md";
     }
   };
