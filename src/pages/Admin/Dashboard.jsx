@@ -44,7 +44,7 @@ const Dashboard = () => {
         axiosInstance.get('/analytics/daily-visitors?days=30'),
         axiosInstance.get('/analytics/project-detailed-stats'), 
         axiosInstance.get('/analytics/social-clicks'),
-        axiosInstance.get('/analytics/visitors?limit=25'), // Increased limit to ensure plenty of data after filtering
+        axiosInstance.get('/analytics/visitors?limit=25'), 
       ]);
 
       setStats(statsRes.data);
