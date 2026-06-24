@@ -14,15 +14,28 @@ const skillCategories = [
     ]
   },
   {
-    title: 'Backend & Databases',
+    title: 'Backend Development',
     skills: [
       { name: 'Python', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg' },
       { name: 'Flask', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/flask/flask-original.svg', invert: true },
       { name: 'Django', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/django/django-plain.svg', invert: true },
       { name: 'FastAPI', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/fastapi/fastapi-original.svg' },
+      { name: 'Node.js', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg' },
+      { name: 'Express', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/express/express-original.svg', invert: true },
       { name: 'C#', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/csharp/csharp-plain.svg' },
-      { name: 'PHP', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg' },
-      { name: 'PostgreSQL', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg' }
+    ]
+  },
+  {
+    title: 'Databases',
+    skills: [
+      { name: 'PostgreSQL', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg' },
+      { name: 'MongoDB', icon: '/skills/mongodb.svg' },
+      { name: 'MySQL', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg' },
+      { name: 'SQLite', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sqlite/sqlite-original.svg' },
+      { name: 'Supabase', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/supabase/supabase-original.svg' },
+      { name: 'Atlas', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg' },
+      { name: 'Redis', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/redis/redis-original.svg' },
+      
     ]
   },
   {
@@ -30,11 +43,23 @@ const skillCategories = [
     skills: [
       { name: 'Git', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg' },
       { name: 'GitHub', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg', invert: true },
+      { name: 'Docker', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg' },
       { name: 'Postman', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postman/postman-original.svg' },
       { name: 'Swagger', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/swagger/swagger-original.svg' },
-      { name: 'Docker', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg' },
-      { name: 'Supabase', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/supabase/supabase-original.svg' },
-      { name: 'CI/CD', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/githubactions/githubactions-original.svg' }
+      { name: 'Azure', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/azure/azure-original.svg' },
+      { name: 'CI/CD', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/githubactions/githubactions-original.svg' },
+    ]
+  },
+  {
+    title: 'AI Assistants',
+    skills: [
+      { name: 'ChatGPT', icon: '/skills/chatgpt.svg' },
+      { name: 'Gemini', icon: '/skills/gemini.svg' },
+      { name: 'Claude', icon: '/skills/claude.svg' },
+      { name: 'DeepSeek', icon: 'https://deepseek.com/favicon.ico' },
+      { name: 'Copilot', icon: '/skills/copilot.svg' },
+      { name: 'v0', icon: '/skills/v0.svg' },
+      { name: 'Codex', icon: '/skills/codex.svg' }
     ]
   }
 ];
@@ -56,7 +81,7 @@ const Skills = () => {
         </div>
 
         <p className="text-gray-400 font-light text-center mb-16 max-w-2xl mx-auto">
-          Tech Stack I use to build web applications.I specialize in Python-based backend development and modern frontend frameworks. I'm always eager to learn new tools and stay up-to-date with the latest trends in web development.
+          Tech Stack I use to build web applications. I specialize in Python-based backend development and modern frontend frameworks. I'm always eager to learn new tools and stay up-to-date with the latest trends in web development.
         </p>
 
         {/* Stack of Categories */}
@@ -64,7 +89,7 @@ const Skills = () => {
           {skillCategories.map((category) => (
             <div key={category.title} className="flex flex-col gap-10">
               
-              {/* Category Subheading (Sci-Fi Data Divider style) */}
+              {/* Category Subheading */}
               <div className="relative flex items-center justify-center">
                 <div className="absolute w-full h-[1px] bg-gradient-to-r from-transparent via-[#00E5FF]/30 to-transparent"></div>
                 <h3 className="relative px-6 bg-[#030712] text-sm md:text-base font-semibold text-[#00E5FF] tracking-widest uppercase shadow-[0_0_15px_#030712]">
@@ -72,7 +97,7 @@ const Skills = () => {
                 </h3>
               </div>
 
-              {/* Grid Layout for Orbs */}
+              {/* Grid Layout */}
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-8 md:gap-10 justify-items-center">
                 {category.skills.map((skill) => (
                   <div key={skill.name} className="flex flex-col items-center text-center group cursor-default">
@@ -80,14 +105,17 @@ const Skills = () => {
                     {/* The Sci-Fi Orb */}
                     <div className="relative w-20 h-20 md:w-24 md:h-24 mb-4 flex items-center justify-center rounded-full bg-[#0B1B2E]/50 backdrop-blur-sm border border-[#00E5FF]/20 shadow-[inset_0_0_15px_rgba(0,229,255,0.05)] transition-all duration-500 group-hover:border-[#00E5FF]/60 group-hover:bg-[#0B1B2E]/80 group-hover:shadow-[0_0_20px_rgba(0,229,255,0.2),inset_0_0_20px_rgba(0,229,255,0.1)] group-hover:-translate-y-2">
                       
-                      {/* Inner glowing core for hover effect */}
+                      {/* Inner glowing core */}
                       <div className="absolute inset-0 rounded-full bg-[#00E5FF]/0 group-hover:bg-[#00E5FF]/5 transition-colors duration-500"></div>
                       
                       {/* Icon */}
                       <img 
                         src={skill.icon} 
                         className={`relative z-10 w-10 h-10 md:w-12 md:h-12 opacity-70 group-hover:opacity-100 transition-all duration-500 group-hover:drop-shadow-[0_0_8px_rgba(0,229,255,0.8)] ${skill.invert ? 'filter invert' : ''}`} 
-                        alt={skill.name} 
+                        alt={skill.name}
+                        onError={(e) => {
+                          e.target.src = `https://ui-avatars.com/api/?name=${skill.name}&background=00E5FF&color=fff&size=48`;
+                        }}
                       />
                     </div>
 
