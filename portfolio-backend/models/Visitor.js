@@ -6,7 +6,6 @@ const visitorSchema = new mongoose.Schema(
     sessionId: {
       type: String,
       required: true,
-      index: true,
     },
 
     // Hashed IP (GDPR compliant)
@@ -57,7 +56,7 @@ const visitorSchema = new mongoose.Schema(
             type: String,
             required: true,
           },
-          timestamp: {
+          eventDate: { 
             type: Date,
             default: Date.now,
           },
@@ -65,22 +64,20 @@ const visitorSchema = new mongoose.Schema(
       ],
       default: [],
     },
-
-    // When this happened
-    timestamp: {
-      type: Date,
-      default: Date.now,
-      index: true,
-    },
+    
   },
   {
-    timestamps: true,
+    timestamps: true, 
   }
 );
 
-// Compound indexes for fast queries
-visitorSchema.index({ sessionId: 1, timestamp: -1 });
-visitorSchema.index({ 'page.path': 1, timestamp: -1 });
-visitorSchema.index({ timestamp: -1 });
+// ==========================================
+// INDEXING STRATEGY
+// ==========================================
+
+visitorSchema.index({ sessionId: 1, createdAt: -1 });
+visitorSchema.index({ 'page.path': 1, createdAt: -1 });
+visitorSchema.index({ createdAt: -1 });
+visitorSchema.index({ createdAt: 1 }, { expireAfterSeconds: 31536000 });
 
 module.exports = mongoose.model('Visitor', visitorSchema);
