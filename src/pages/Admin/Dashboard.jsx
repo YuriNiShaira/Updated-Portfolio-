@@ -46,11 +46,21 @@ const Dashboard = () => {
         axiosInstance.get('/analytics/visitors?limit=25'), 
       ]);
 
+      // ✅ FIX: Format daily data properly
+      const formattedDailyData = Array.isArray(dailyRes.data) ? dailyRes.data.map(item => ({
+        date: item.date ? new Date(item.date).toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric' 
+        }) : 'Unknown',
+        visitors: item.visitors || 0,
+        uniqueVisitors: item.uniqueVisitors || 0,
+      })) : [];
+
       setStats(statsRes.data);
-      setDailyData(dailyRes.data);
-      setProjectDetailedData(detailedRes.data); 
-      setSocialData(socialRes.data);
-      setRecentVisitors(visitorsRes.data.visitors || []);
+      setDailyData(formattedDailyData);
+      setProjectDetailedData(detailedRes.data || []); 
+      setSocialData(socialRes.data || []);
+      setRecentVisitors(visitorsRes.data?.visitors || []);
     } catch (err) {
       setError('Failed to load analytics data');
       console.error(err);
@@ -195,25 +205,60 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Daily Visitors Chart */}
+        {/*Daily Visitors Chart */}
         <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-6">
-            <svg className="w-4 h-4 text-[#00E5FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+            <svg className="w-4 h-4 text-[#00E5FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
             <h3 className="text-white font-mono text-sm font-semibold tracking-wider uppercase">Daily Traffic Trend</h3>
+            {dailyData.length > 0 && (
+              <span className="ml-auto text-slate-500 text-xs">{dailyData.length} days</span>
+            )}
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" opacity={0.3} />
-              <XAxis dataKey="date" tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={{ stroke: '#334155' }} />
-              <YAxis tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={{ stroke: '#334155' }} />
-              <Tooltip
-                contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '8px' }}
-                labelStyle={{ color: '#00E5FF', fontWeight: 'bold' }}
-              />
-              <Line type="monotone" name="Total Visits" dataKey="visitors" stroke="#00E5FF" strokeWidth={2.5} dot={false} activeDot={{ r: 6 }} />
-              <Line type="monotone" name="Unique Visitors" dataKey="uniqueVisitors" stroke="#00E676" strokeWidth={2.5} dot={false} activeDot={{ r: 6 }} />
-            </LineChart>
-          </ResponsiveContainer>
+          
+          {dailyData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={dailyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" opacity={0.3} />
+                <XAxis 
+                  dataKey="date" 
+                  tick={{ fill: '#94a3b8', fontSize: 10 }} 
+                  axisLine={{ stroke: '#334155' }} 
+                />
+                <YAxis 
+                  tick={{ fill: '#94a3b8', fontSize: 10 }} 
+                  axisLine={{ stroke: '#334155' }} 
+                />
+                <Tooltip
+                  contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '8px' }}
+                  labelStyle={{ color: '#00E5FF', fontWeight: 'bold' }}
+                />
+                <Line 
+                  type="monotone" 
+                  name="Total Visits" 
+                  dataKey="visitors" 
+                  stroke="#00E5FF" 
+                  strokeWidth={2.5} 
+                  dot={false} 
+                  activeDot={{ r: 6 }} 
+                />
+                <Line 
+                  type="monotone" 
+                  name="Unique Visitors" 
+                  dataKey="uniqueVisitors" 
+                  stroke="#00E676" 
+                  strokeWidth={2.5} 
+                  dot={false} 
+                  activeDot={{ r: 6 }} 
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[300px] flex items-center justify-center text-slate-500 text-sm font-mono">
+              No daily data available yet. Visit your portfolio to generate data!
+            </div>
+          )}
         </div>
 
         {/* Analytical Breakdown Deep Dive section */}
@@ -222,7 +267,9 @@ const Dashboard = () => {
           {/* Project Interaction Breakdown Bar Chart */}
           <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 rounded-xl p-6 lg:col-span-7">
             <div className="flex items-center gap-2 mb-6">
-              <svg className="w-4 h-4 text-[#00E5FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" /></svg>
+              <svg className="w-4 h-4 text-[#00E5FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+              </svg>
               <h3 className="text-white font-mono text-sm font-semibold tracking-wider uppercase">Project Interactions Breakdown</h3>
             </div>
             
@@ -246,10 +293,12 @@ const Dashboard = () => {
             )}
           </div>
 
-          {/* Social Clicks Pie Chart with Side Legend */}
+          {/* Social Clicks Pie Chart */}
           <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 rounded-xl p-6 lg:col-span-5">
             <div className="flex items-center gap-2 mb-4">
-              <svg className="w-4 h-4 text-[#0091EA]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5l1.5-1.5m3.033-7.364l1.5-1.5a4 4 0 00-5.656-5l-4 4a4 4 0 005.656 5.656l1.1-1.1" /></svg>
+              <svg className="w-4 h-4 text-[#0091EA]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5l1.5-1.5m3.033-7.364l1.5-1.5a4 4 0 00-5.656-5l-4 4a4 4 0 005.656 5.656l1.1-1.1" />
+              </svg>
               <h3 className="text-white font-mono text-sm font-semibold tracking-wider uppercase">Social Distribution</h3>
             </div>
 
@@ -276,7 +325,6 @@ const Dashboard = () => {
                 </ResponsiveContainer>
               </div>
 
-              {/* Explicit side legend custom designed */}
               <div className="w-full sm:w-1/2 space-y-2 overflow-y-auto max-h-[220px] pr-2">
                 {socialData.map((entry, index) => (
                   <div key={entry.platform} className="flex items-center justify-between p-2 rounded-lg bg-slate-900/60 border border-slate-800/40">
@@ -297,7 +345,9 @@ const Dashboard = () => {
           {/* Full-width Row Filtered Recent Activity Logs */}
           <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 rounded-xl p-6 lg:col-span-12">
             <div className="flex items-center gap-2 mb-6">
-              <svg className="w-4 h-4 text-[#FFD740]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <svg className="w-4 h-4 text-[#FFD740]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
               <h3 className="text-white font-mono text-sm font-semibold tracking-wider uppercase">Live Activity Logs</h3>
             </div>
             
