@@ -22,6 +22,7 @@ const Dashboard = () => {
   });
   const [dailyData, setDailyData] = useState([]);
   const [projectData, setProjectData] = useState([]);
+  const [projectDetailedData, setProjectDetailedData] = useState([]); 
   const [socialData, setSocialData] = useState([]);
   const [recentVisitors, setRecentVisitors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,10 +37,11 @@ const Dashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [statsRes, dailyRes, projectRes, socialRes, visitorsRes] = await Promise.all([
+      const [statsRes, dailyRes, projectRes, detailedRes, socialRes, visitorsRes] = await Promise.all([
         axiosInstance.get('/analytics/stats'),
         axiosInstance.get('/analytics/daily-visitors?days=30'),
         axiosInstance.get('/analytics/project-views'),
+        axiosInstance.get('/analytics/project-detailed-stats'), 
         axiosInstance.get('/analytics/social-clicks'),
         axiosInstance.get('/analytics/visitors?limit=10'),
       ]);
@@ -47,6 +49,7 @@ const Dashboard = () => {
       setStats(statsRes.data);
       setDailyData(dailyRes.data);
       setProjectData(projectRes.data);
+      setProjectDetailedData(detailedRes.data); 
       setSocialData(socialRes.data);
       setRecentVisitors(visitorsRes.data.visitors || []);
     } catch (err) {
@@ -64,6 +67,15 @@ const Dashboard = () => {
   }, []);
 
   const COLORS = ['#00E5FF', '#00B8D4', '#0091EA', '#00E676', '#FFD740'];
+
+  // Calculate total project interactions
+  const totalProjectInteractions = projectDetailedData.reduce((sum, p) => {
+    return sum + (p.galleryViews || 0) + (p.githubClicks || 0) + (p.liveDemoClicks || 0);
+  }, 0);
+
+  const totalGalleryViews = projectDetailedData.reduce((sum, p) => sum + (p.galleryViews || 0), 0);
+  const totalGithubClicks = projectDetailedData.reduce((sum, p) => sum + (p.githubClicks || 0), 0);
+  const totalDemoClicks = projectDetailedData.reduce((sum, p) => sum + (p.liveDemoClicks || 0), 0);
 
   if (loading) {
     return (
@@ -131,11 +143,18 @@ const Dashboard = () => {
             <p className="text-gray-500 text-xs font-mono tracking-widest uppercase">Events Tracked</p>
             <p className="text-3xl font-bold text-white mt-2">{stats.totalEvents}</p>
           </div>
+          
+          {/* ✅ FIXED: Projects Viewed */}
           <div className="bg-[#0B1B2E]/40 backdrop-blur-md border border-[#00E5FF]/20 rounded-sm p-6">
-            <p className="text-gray-500 text-xs font-mono tracking-widest uppercase">Projects Viewed</p>
-            <p className="text-3xl font-bold text-white mt-2">
-              {projectData.reduce((sum, p) => sum + p.views, 0)}
-            </p>
+            <p className="text-gray-500 text-xs font-mono tracking-widest uppercase">Project Interactions</p>
+            <p className="text-3xl font-bold text-white mt-2">{totalProjectInteractions}</p>
+            <div className="flex gap-2 mt-1 text-xs">
+              <span className="text-[#00E5FF]">👁 {totalGalleryViews}</span>
+              <span className="text-gray-600">|</span>
+              <span className="text-[#00E676]">🐙 {totalGithubClicks}</span>
+              <span className="text-gray-600">|</span>
+              <span className="text-[#FFD740]">🚀 {totalDemoClicks}</span>
+            </div>
           </div>
         </div>
 
@@ -166,18 +185,28 @@ const Dashboard = () => {
 
         {/* Bottom Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Project Views */}
+          {/* Project Views - Now shows detailed stats */}
           <div className="bg-[#0B1B2E]/40 backdrop-blur-md border border-[#00E5FF]/20 rounded-sm p-6">
             <h3 className="text-white font-mono text-sm tracking-widest uppercase mb-4">🚀 Top Projects</h3>
             <div className="space-y-3">
-              {projectData.slice(0, 5).map((p, i) => (
-                <div key={p.project} className="flex justify-between items-center border-b border-gray-800/50 pb-2">
-                  <span className="text-gray-300 text-sm">{p.project}</span>
-                  <span className="text-[#00E5FF] font-mono text-sm">{p.views} views</span>
-                </div>
-              ))}
-              {projectData.length === 0 && (
-                <p className="text-gray-500 text-sm">No project views yet</p>
+              {projectDetailedData.slice(0, 5).map((p, i) => {
+                const total = (p.galleryViews || 0) + (p.githubClicks || 0) + (p.liveDemoClicks || 0);
+                return (
+                  <div key={p.project} className="border-b border-gray-800/50 pb-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300 text-sm">{p.project}</span>
+                      <span className="text-[#00E5FF] font-mono text-sm">{total} total</span>
+                    </div>
+                    <div className="flex gap-2 mt-1 text-xs text-gray-500">
+                      <span>👁 {p.galleryViews || 0}</span>
+                      <span>🐙 {p.githubClicks || 0}</span>
+                      <span>🚀 {p.liveDemoClicks || 0}</span>
+                    </div>
+                  </div>
+                );
+              })}
+              {projectDetailedData.length === 0 && (
+                <p className="text-gray-500 text-sm">No project interactions yet</p>
               )}
             </div>
           </div>
