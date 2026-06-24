@@ -196,3 +196,65 @@ exports.getSocialClicks = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Get detailed project stats (gallery, github, live demo views)
+exports.getProjectDetailedStats = async (req, res) => {
+  try {
+    const projectStats = await Visitor.aggregate([
+      { $unwind: { path: '$events', preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          'events.type': { 
+            $in: ['project_gallery_view', 'project_github_click', 'project_live_demo_click'] 
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            project: '$events.target',
+            type: '$events.type'
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $group: {
+          _id: '$_id.project',
+          galleryViews: {
+            $sum: {
+              $cond: [{ $eq: ['$_id.type', 'project_gallery_view'] }, '$count', 0]
+            }
+          },
+          githubClicks: {
+            $sum: {
+              $cond: [{ $eq: ['$_id.type', 'project_github_click'] }, '$count', 0]
+            }
+          },
+          liveDemoClicks: {
+            $sum: {
+              $cond: [{ $eq: ['$_id.type', 'project_live_demo_click'] }, '$count', 0]
+            }
+          },
+          totalInteractions: { $sum: '$count' }
+        }
+      },
+      {
+        $project: {
+          project: '$_id',
+          galleryViews: 1,
+          githubClicks: 1,
+          liveDemoClicks: 1,
+          totalInteractions: 1
+        }
+      },
+      { $sort: { totalInteractions: -1 } }
+    ]);
+
+    console.log('📊 Detailed project stats:', projectStats);
+    res.json(projectStats);
+  } catch (error) {
+    console.error('❌ Detailed project stats error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
