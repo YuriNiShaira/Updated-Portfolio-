@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ProjectModal from './ProjectModal';
+import analytics from '../utils/analytics'; // Import analytics - adjust path as needed
 
 // Import all images from src/assets
 const imageModules = import.meta.glob('/src/assets/*.{jpg,jpeg,png}', { eager: true });
@@ -351,9 +352,16 @@ const Projects = () => {
                     <div className="flex items-center gap-5 mt-auto">
                       <a 
                         href={proj.github} 
-                        target="_blank" 
-                        rel="noreferrer" 
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.preventDefault(); // Stop mobile browsers from getting confused by the tap
+                          e.stopPropagation(); // Stop the project modal from opening
+                          
+                          // 📊 Track the click in your analytics dashboard!
+                          analytics.trackEvent('link_click', `${proj.title} - GitHub`); 
+                          
+                          // Open the link safely
+                          window.open(proj.github, '_blank', 'noopener,noreferrer');
+                        }}
                         className="flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-3.5 bg-transparent border border-gray-600 text-gray-300 hover:text-white hover:border-gray-400 rounded text-xs md:text-sm font-bold tracking-widest uppercase transition-all duration-300"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -365,9 +373,15 @@ const Projects = () => {
                       {proj.liveDemo && (
                         <a 
                           href={proj.liveDemo} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            // 📊 Track the click in your analytics dashboard!
+                            analytics.trackEvent('link_click', `${proj.title} - Live Demo`);
+                            
+                            window.open(proj.liveDemo, '_blank', 'noopener,noreferrer');
+                          }}
                           className="flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-3.5 bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF] hover:bg-[#00E5FF] hover:text-[#020611] rounded text-xs md:text-sm font-bold tracking-widest uppercase transition-all duration-300"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
