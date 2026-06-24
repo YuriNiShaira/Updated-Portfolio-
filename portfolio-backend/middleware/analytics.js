@@ -9,13 +9,14 @@ const hashIP = (ip) => {
 
 // Get or create session ID
 const getSessionId = (req, res) => {
-  let sessionId = req.cookies?.analytics_session;
+  let sessionId = req.body?.sessionId || req.cookies?.analytics_session;
+  
   if (!sessionId) {
     sessionId = crypto.randomUUID();
     res.cookie('analytics_session', sessionId, {
       maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', 
       secure: process.env.NODE_ENV === 'production',
     });
   }
@@ -24,8 +25,9 @@ const getSessionId = (req, res) => {
 
 // Main tracking middleware
 exports.trackVisitor = async (req, res, next) => {
-  // ✅ FIXED: Skip ALL API routes (not just admin/auth)
-  if (req.path.startsWith('/api/')) {
+  const skippedRoutes = ['/api/auth', '/api/health', '/api/analytics'];
+  
+  if (skippedRoutes.some(route => req.path.startsWith(route))) {
     return next();
   }
 
@@ -106,11 +108,13 @@ exports.trackVisitor = async (req, res, next) => {
   }
 };
 
-// Track specific events - FIXED with better error handling
+// Track specific events
 exports.trackEvent = async (req, res) => {
   try {
-    const { eventType, target } = req.body;
-    const sessionId = req.cookies?.analytics_session;
+    const { eventType, target, sessionId: bodySessionId } = req.body;
+    
+    // ✅ FIXED: Prioritize the frontend's localStorage ID to bypass mobile cookie blocks
+    const sessionId = bodySessionId || req.cookies?.analytics_session;
 
     if (!sessionId) {
       return res.status(400).json({ message: 'No session found' });
