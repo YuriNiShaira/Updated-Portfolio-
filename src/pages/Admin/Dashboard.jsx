@@ -3,13 +3,10 @@ import axios from 'axios';
 import {
   LineChart,
   Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
+  XAxis,
+  YAxis,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -23,7 +20,6 @@ const Dashboard = () => {
     totalEvents: 0,
   });
   const [dailyData, setDailyData] = useState([]);
-  const [pageData, setPageData] = useState([]);
   const [projectData, setProjectData] = useState([]);
   const [socialData, setSocialData] = useState([]);
   const [recentVisitors, setRecentVisitors] = useState([]);
@@ -39,10 +35,10 @@ const Dashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [statsRes, dailyRes, pageRes, projectRes, socialRes, visitorsRes] = await Promise.all([
+      // REMOVED page-analytics from the fetch calls
+      const [statsRes, dailyRes, projectRes, socialRes, visitorsRes] = await Promise.all([
         axiosInstance.get('/analytics/stats'),
         axiosInstance.get('/analytics/daily-visitors?days=30'),
-        axiosInstance.get('/analytics/page-analytics'),
         axiosInstance.get('/analytics/project-views'),
         axiosInstance.get('/analytics/social-clicks'),
         axiosInstance.get('/analytics/visitors?limit=10'),
@@ -50,7 +46,6 @@ const Dashboard = () => {
 
       setStats(statsRes.data);
       setDailyData(dailyRes.data);
-      setPageData(pageRes.data);
       setProjectData(projectRes.data);
       setSocialData(socialRes.data);
       setRecentVisitors(visitorsRes.data.visitors || []);
@@ -64,7 +59,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchData();
-    // Refresh every 30 seconds
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -145,12 +139,11 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Daily Visitors Chart */}
+        {/* Full Width Daily Visitors Chart */}
+        <div className="mb-8">
           <div className="bg-[#0B1B2E]/40 backdrop-blur-md border border-[#00E5FF]/20 rounded-sm p-6">
             <h3 className="text-white font-mono text-sm tracking-widest uppercase mb-4">📈 Daily Visitors</h3>
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={300}>
               <LineChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1a2a3a" />
                 <XAxis dataKey="date" tick={{ fill: '#666', fontSize: 10 }} />
@@ -162,23 +155,6 @@ const Dashboard = () => {
                 <Line type="monotone" dataKey="visitors" stroke="#00E5FF" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="uniqueVisitors" stroke="#00E676" strokeWidth={2} dot={false} />
               </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Page Analytics */}
-          <div className="bg-[#0B1B2E]/40 backdrop-blur-md border border-[#00E5FF]/20 rounded-sm p-6">
-            <h3 className="text-white font-mono text-sm tracking-widest uppercase mb-4">📄 Top Pages</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={pageData.slice(0, 6)} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#1a2a3a" />
-                <XAxis type="number" tick={{ fill: '#666', fontSize: 10 }} />
-                <YAxis type="category" dataKey="page" tick={{ fill: '#666', fontSize: 10 }} width={80} />
-                <Tooltip
-                  contentStyle={{ background: '#0B1B2E', border: '1px solid #00E5FF/30' }}
-                  labelStyle={{ color: '#00E5FF' }}
-                />
-                <Bar dataKey="views" fill="#00E5FF" />
-              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
@@ -239,7 +215,7 @@ const Dashboard = () => {
                   <div>
                     <span className="text-gray-500 text-xs">{v.page?.path || '/'}</span>
                     <span className="text-gray-600 text-xs ml-2">
-                      {new Date(v.timestamp).toLocaleTimeString()}
+                      {new Date(v.timestamp || v.createdAt).toLocaleTimeString()}
                     </span>
                   </div>
                 </div>
