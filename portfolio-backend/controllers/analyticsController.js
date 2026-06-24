@@ -13,7 +13,7 @@ exports.getDashboardStats = async (req, res) => {
     console.log('📊 Unique visitors:', uniqueVisitors);
     
     const eventsResult = await Visitor.aggregate([
-      { $unwind: { path: '$events', preserveNullAndEmptyArrays: true } },
+      { $unwind: '$events' },
       { $count: 'total' }
     ]);
     const totalEvents = eventsResult[0]?.total || 0;
