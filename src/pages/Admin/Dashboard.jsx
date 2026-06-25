@@ -191,7 +191,7 @@ const Dashboard = () => {
 
           <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 rounded-xl p-6 transition-all hover:border-slate-700/60">
             <div className="flex justify-between items-start">
-              <p className="text-slate-400 text-xs font-mono tracking-widest uppercase">Project Views</p>
+              <p className="text-slate-400 text-xs font-mono tracking-widest uppercase">Interactions</p>
               <span className="p-1.5 bg-slate-800/60 rounded-md text-[#FFD740]">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
               </span>

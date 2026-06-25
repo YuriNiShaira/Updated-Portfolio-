@@ -7,59 +7,36 @@ const hashIP = (ip) => {
   return crypto.createHash('sha256').update(ip + process.env.IP_SALT).digest('hex');
 };
 
-// Get or create session ID
-const getSessionId = (req, res) => {
-  let sessionId = req.cookies?.analytics_session;
-  if (!sessionId) {
-    sessionId = crypto.randomUUID();
-    res.cookie('analytics_session', sessionId, {
-      maxAge: 365 * 24 * 60 * 60 * 1000,
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-    });
-    console.log('New session cookie set:', sessionId);
-  }
-  return sessionId;
-};
-
 // Main tracking middleware
 exports.trackVisitor = async (req, res, next) => {
-  // ALWAYS ensure session cookie exists (even for API routes)
-  const sessionId = getSessionId(req, res);
-  
-  // Skip tracking for API routes, but cookie is already set
-  if (req.path.startsWith('/api/')) {
-    console.log('API route, cookie set but skipping tracking:', req.path);
+  if (!req.path.includes('/track-event')) {
     return next();
   }
 
-  // Skip static assets
-  if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|json)$/)) {
-    return next();
+  if (req.body.eventType !== 'page_view') {
+    return next(); 
   }
-
-  console.log('Tracking visitor:', req.path, req.method);
 
   // Skip bots
   const userAgent = req.headers['user-agent'] || '';
   const botPatterns = /bot|crawler|spider|scraper|headless|vercel|aws|google|bing|yandex|slurp|duckduckgo|lighthouse|postman/i;
   
   if (botPatterns.test(userAgent)) {
-    console.log('Bot detected, skipping');
     return next();
   }
 
   try {
+    const sessionId = req.body.sessionId || req.cookies?.analytics_session;
+    if (!sessionId) return next();
+
     const ip = req.ip || req.connection.remoteAddress || '0.0.0.0';
     const ipHash = hashIP(ip);
     
     const parser = new UAParser(userAgent);
     const uaResult = parser.getResult();
 
-    const actualPage = req.path || '/';
+    const actualPage = req.body.target || '/';
 
-    // Check for existing visit in last 30 seconds
     const existingVisit = await Visitor.findOne({
       sessionId,
       'page.path': actualPage,
@@ -68,7 +45,7 @@ exports.trackVisitor = async (req, res, next) => {
     if (existingVisit) {
       const timeDiff = Date.now() - existingVisit.createdAt;
       
-      if (timeDiff < 30000) {
+      if (timeDiff < 1800000) {
         await Visitor.updateOne(
           { _id: existingVisit._id },
           {
@@ -78,7 +55,7 @@ exports.trackVisitor = async (req, res, next) => {
             },
           }
         );
-        console.log('Updated existing visit');
+        req.existingVisitorId = existingVisit._id; 
         return next();
       }
     }
@@ -110,70 +87,49 @@ exports.trackVisitor = async (req, res, next) => {
         clicks: 0,
       },
       events: [],
-      timestamp: new Date(),
     };
 
     const newVisitor = await Visitor.create(visitorData);
-    console.log('New visitor created:', newVisitor._id);
+    req.existingVisitorId = newVisitor._id;
     next();
   } catch (error) {
     console.error('Analytics error:', error);
-    next();
+    next(); 
   }
 };
 
-// Track specific events - FIXED: Creates session and visitor if needed
+// Track specific events
 exports.trackEvent = async (req, res) => {
   try {
-    const { eventType, target } = req.body;
-    let sessionId = req.cookies?.analytics_session;
+    const { eventType, target, sessionId: bodySessionId } = req.body;
+    const sessionId = bodySessionId || req.cookies?.analytics_session;
 
-    console.log('Tracking event:', { eventType, target, sessionId });
-
-    // If no session, create one
     if (!sessionId) {
-      sessionId = crypto.randomUUID();
-      res.cookie('analytics_session', sessionId, {
-        maxAge: 365 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-      });
-      console.log('New session created in trackEvent:', sessionId);
+      return res.status(400).json({ message: 'No session found' });
     }
 
-    // Find the latest visitor for this session
-    let visitor = await Visitor.findOne({ sessionId }).sort({ createdAt: -1 });
+    let visitorId = req.existingVisitorId;
     
-    if (!visitor) {
-      // Create new visitor if none exists
-      visitor = new Visitor({
-        sessionId,
-        ipHash: 'anonymous',
-        device: { browser: 'Unknown', os: 'Unknown', deviceType: 'Unknown' },
-        page: { path: '/', title: 'Portfolio' },
-        events: [],
-        timestamp: new Date()
-      });
-      await visitor.save();
-      console.log('New visitor created in trackEvent');
+    if (!visitorId) {
+      const latestVisitor = await Visitor.findOne({ sessionId }).sort({ createdAt: -1 });
+      if (latestVisitor) visitorId = latestVisitor._id;
     }
 
-    // Add event to visitor
-    await Visitor.updateOne(
-      { _id: visitor._id },
-      {
-        $push: {
-          events: {
-            type: eventType,
-            target: target,
-            eventDate: new Date()
+    if (visitorId) {
+      await Visitor.updateOne(
+        { _id: visitorId },
+        {
+          $push: {
+            events: {
+              type: eventType,
+              target: target,
+              eventDate: new Date()
+            }
           }
         }
-      }
-    );
+      );
+    }
 
-    console.log('Event saved:', eventType, target);
     res.json({ success: true });
   } catch (error) {
     console.error('Event tracking error:', error);
