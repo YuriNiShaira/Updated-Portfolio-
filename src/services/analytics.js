@@ -31,13 +31,26 @@ class AnalyticsService {
     return sessionId;
   }
 
+  // Check if we should track (skip admin pages)
+  shouldTrack() {
+    return !window.location.pathname.startsWith('/admin');
+  }
+
   // Initialize tracking
   init() {
     console.log('🚀 Analytics.init() called');
+    
+    // Don't initialize on admin pages
+    if (!this.shouldTrack()) {
+      console.log('⏭️ Skipping analytics on admin page');
+      return;
+    }
+
     if (this.initialized) {
       console.log('⚠️ Analytics already initialized');
       return;
     }
+    
     this.initialized = true;
     console.log('✅ Analytics initialized');
 
@@ -99,6 +112,9 @@ class AnalyticsService {
   }
 
   handleRouteChange() {
+    // Skip if on admin page
+    if (!this.shouldTrack()) return;
+
     const newPath = window.location.pathname;
     if (this.page !== newPath) {
       console.log('🔄 Route changed from', this.page, 'to', newPath);
@@ -127,6 +143,9 @@ class AnalyticsService {
 
   // Track page view
   async trackPageView() {
+    // Skip if on admin page
+    if (!this.shouldTrack()) return;
+
     try {
       console.log('📄 trackPageView called for path:', window.location.pathname);
       
@@ -186,6 +205,9 @@ class AnalyticsService {
     let timeoutId = null;
 
     const updateScroll = () => {
+      // Skip if on admin page
+      if (!this.shouldTrack()) return;
+
       // Throttle scroll events
       if (timeoutId) return;
       
@@ -226,6 +248,9 @@ class AnalyticsService {
 
   // Track time on page with improved accuracy
   trackTimeOnPage() {
+    // Skip if on admin page
+    if (!this.shouldTrack()) return;
+
     const timeSpent = Math.round((Date.now() - this.startTime) / 1000);
     if (timeSpent > 5) { // Only track if > 5 seconds
       console.log('⏱️ Time on page:', timeSpent + 's');
@@ -235,26 +260,19 @@ class AnalyticsService {
 
   // Track custom events with batching support
   async trackEvent(eventType, target) {
-    try {
-      // Don't track events on admin pages
-      if (window.location.pathname.startsWith('/admin')) {
-        console.log('⏭️ Skipping tracking on admin page');
-        return;
-      }
+    // Skip if on admin page
+    if (!this.shouldTrack()) {
+      console.log('⏭️ Skipping tracking on admin page');
+      return;
+    }
 
+    try {
       console.log(`📤 Sending event: ${eventType} -> ${target}`);
-      
-      // Get additional page context
-      const pageTitle = document.title || 'Portfolio';
-      const referrer = document.referrer || 'direct';
       
       const response = await this.sendRequest('/track-event', {
         sessionId: this.sessionId,
         eventType: eventType,
         target: target,
-        page: window.location.pathname,
-        pageTitle: pageTitle,
-        referrer: referrer,
         timestamp: new Date().toISOString(),
         screenSize: `${window.innerWidth}x${window.innerHeight}`
       });
@@ -315,14 +333,11 @@ class AnalyticsService {
     this.trackEvent('project_live_demo_click', projectTitle);
   }
 
-  // Track 404 errors
-  track404Error(url) {
-    console.log('❌ 404 error tracked:', url);
-    this.trackEvent('404_error', url);
-  }
-
   // Track performance metrics
   trackPerformance() {
+    // Skip if on admin page
+    if (!this.shouldTrack()) return;
+
     if (window.performance && window.performance.timing) {
       const timing = window.performance.timing;
       const loadTime = timing.loadEventEnd - timing.navigationStart;
@@ -334,38 +349,6 @@ class AnalyticsService {
         this.trackEvent('performance_load', `${loadTime}ms`);
       }
     }
-  }
-
-  // Track user engagement (mouse movement, clicks)
-  trackEngagement() {
-    let clickCount = 0;
-    let lastClickTime = 0;
-
-    document.addEventListener('click', (e) => {
-      clickCount++;
-      const now = Date.now();
-      const timeSinceLastClick = lastClickTime ? (now - lastClickTime) / 1000 : 0;
-      lastClickTime = now;
-      
-      // Track rapid clicks (potential spam)
-      if (clickCount % 10 === 0) {
-        this.trackEvent('engagement_click', `${clickCount}`);
-      }
-    });
-
-    // Track idle time
-    let idleTimeout = null;
-    const resetIdleTimer = () => {
-      clearTimeout(idleTimeout);
-      idleTimeout = setTimeout(() => {
-        console.log('💤 User idle for 30 seconds');
-        this.trackEvent('user_idle', '30s');
-      }, 30000);
-    };
-
-    document.addEventListener('mousemove', resetIdleTimer);
-    document.addEventListener('keydown', resetIdleTimer);
-    resetIdleTimer();
   }
 }
 
@@ -384,13 +367,9 @@ if (!window.location.pathname.startsWith('/admin')) {
         analytics.trackPerformance();
       }, 1000);
     });
-
-    // Track engagement
-    analytics.trackEngagement();
   }, 0);
 }
 
 console.log('✅ AnalyticsService instance created');
 
-// Export the instance
 export default analytics;

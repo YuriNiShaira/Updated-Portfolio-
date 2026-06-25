@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -20,24 +20,7 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Analytics wrapper component
-const AnalyticsWrapper = ({ children }) => {
-  const location = useLocation();
-
-  useEffect(() => {
-    // Track page views on route change
-    if (!location.pathname.startsWith('/admin')) {
-      // Small delay to ensure the page is rendered
-      setTimeout(() => {
-        analytics.trackPageView();
-      }, 100);
-    }
-  }, [location.pathname]);
-
-  return children;
-};
-
-// Main portfolio component
+// Main portfolio component (all routes render this)
 const Portfolio = () => {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [stars, setStars] = useState([]);
@@ -49,7 +32,7 @@ const Portfolio = () => {
     
     window.addEventListener('scroll', handleScroll, { passive: true });
 
-    // Generate stars only once
+    // Generate stars
     const nodeCount = 40;
     const newNodes = Array.from({ length: nodeCount }, () => ({
       left: Math.random() * 100,
@@ -96,83 +79,48 @@ const Portfolio = () => {
 };
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('adminToken'));
-
   useEffect(() => {
-    // Initialize analytics only once
-    analytics.init();
-
-    // Track initial page view
-    setTimeout(() => {
-      if (!window.location.pathname.startsWith('/admin')) {
-        analytics.trackPageView();
-      }
-    }, 500);
-
-    // Track performance
-    window.addEventListener('load', () => {
+    // Initialize analytics only for public pages
+    if (!window.location.pathname.startsWith('/admin')) {
+      analytics.init();
+      
+      // Track initial page view
       setTimeout(() => {
-        analytics.trackPerformance();
-      }, 1000);
-    });
+        analytics.trackPageView();
+      }, 500);
 
-    // Track 404 errors
-    if (window.location.pathname !== '/' && !window.location.pathname.startsWith('/admin')) {
-      // Check if it's a valid route (you can expand this check)
-      const validRoutes = ['/', '/about', '/skills', '/projects', '/learning', '/contact'];
-      if (!validRoutes.includes(window.location.pathname)) {
-        analytics.track404Error(window.location.pathname);
-      }
+      // Track performance
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          analytics.trackPerformance();
+        }, 1000);
+      });
     }
-
-    // Listen for storage changes (for logout)
-    const handleStorageChange = (e) => {
-      if (e.key === 'adminToken') {
-        setIsLoggedIn(!!e.newValue);
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
   }, []);
-
-  const handleLogin = (token) => {
-    setIsLoggedIn(true);
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-  };
 
   return (
     <BrowserRouter>
-      <AnalyticsWrapper>
-        <Routes>
-          {/* Admin Routes */}
-          <Route path="/admin/login" element={<Login onLogin={handleLogin} />} />
-          <Route
-            path="/admin/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
+      <Routes>
+        {/* Admin Routes - No analytics tracking */}
+        <Route path="/admin/login" element={<Login />} />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
 
-          {/* Main Portfolio Routes */}
-          <Route path="/" element={<Portfolio />} />
-          <Route path="/about" element={<Portfolio />} />
-          <Route path="/skills" element={<Portfolio />} />
-          <Route path="/projects" element={<Portfolio />} />
-          <Route path="/learning" element={<Portfolio />} />
-          <Route path="/contact" element={<Portfolio />} />
-          
-          {/* Catch all route */}
-          <Route path="*" element={<Portfolio />} />
-        </Routes>
-      </AnalyticsWrapper>
+        {/* Public Routes - All render the same portfolio with analytics */}
+        <Route path="/" element={<Portfolio />} />
+        <Route path="/about" element={<Portfolio />} />
+        <Route path="/skills" element={<Portfolio />} />
+        <Route path="/projects" element={<Portfolio />} />
+        <Route path="/learning" element={<Portfolio />} />
+        <Route path="/contact" element={<Portfolio />} />
+        <Route path="*" element={<Portfolio />} />
+      </Routes>
     </BrowserRouter>
   );
 }
