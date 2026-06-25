@@ -122,26 +122,44 @@ exports.trackVisitor = async (req, res, next) => {
   }
 };
 
-// Track specific events
+// Track specific events - FIXED: Creates session and visitor if needed
 exports.trackEvent = async (req, res) => {
   try {
     const { eventType, target } = req.body;
-    const sessionId = req.cookies?.analytics_session;
+    let sessionId = req.cookies?.analytics_session;
 
     console.log('Tracking event:', { eventType, target, sessionId });
 
+    // If no session, create one
     if (!sessionId) {
-      console.log('No session ID found, skipping event');
-      return res.status(400).json({ message: 'No session found' });
+      sessionId = crypto.randomUUID();
+      res.cookie('analytics_session', sessionId, {
+        maxAge: 365 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+      });
+      console.log('New session created in trackEvent:', sessionId);
     }
 
+    // Find the latest visitor for this session
     let visitor = await Visitor.findOne({ sessionId }).sort({ createdAt: -1 });
     
     if (!visitor) {
-      console.log('No visitor found for session, skipping event');
-      return res.status(404).json({ message: 'No visitor found' });
+      // Create new visitor if none exists
+      visitor = new Visitor({
+        sessionId,
+        ipHash: 'anonymous',
+        device: { browser: 'Unknown', os: 'Unknown', deviceType: 'Unknown' },
+        page: { path: '/', title: 'Portfolio' },
+        events: [],
+        timestamp: new Date()
+      });
+      await visitor.save();
+      console.log('New visitor created in trackEvent');
     }
 
+    // Add event to visitor
     await Visitor.updateOne(
       { _id: visitor._id },
       {
