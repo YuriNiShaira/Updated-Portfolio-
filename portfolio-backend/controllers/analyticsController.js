@@ -91,18 +91,23 @@ exports.getDailyVisitors = async (req, res) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
+    console.log('📊 Fetching daily data from:', startDate);
+
     const dailyData = await Visitor.aggregate([
       {
         $match: {
-          timestamp: { $gte: startDate },
+          $or: [
+            { timestamp: { $gte: startDate } },
+            { createdAt: { $gte: startDate } }
+          ]
         },
       },
       {
         $group: {
           _id: {
-            year: { $year: '$timestamp' },
-            month: { $month: '$timestamp' },
-            day: { $dayOfMonth: '$timestamp' },
+            year: { $year: { $ifNull: ['$timestamp', '$createdAt'] } },
+            month: { $month: { $ifNull: ['$timestamp', '$createdAt'] } },
+            day: { $dayOfMonth: { $ifNull: ['$timestamp', '$createdAt'] } },
           },
           visitors: { $sum: 1 },
           uniqueVisitors: { $addToSet: '$sessionId' },
@@ -124,6 +129,7 @@ exports.getDailyVisitors = async (req, res) => {
       { $sort: { date: 1 } },
     ]);
 
+    console.log('📊 Daily data found:', dailyData.length);
     res.json(dailyData);
   } catch (error) {
     console.error('❌ Daily visitors error:', error);

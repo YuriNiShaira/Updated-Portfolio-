@@ -22,7 +22,7 @@ const getSessionId = (req, res) => {
   return sessionId;
 };
 
-// ✅ FIXED: Main tracking middleware - tracks ALL page visits
+
 exports.trackVisitor = async (req, res, next) => {
   // Skip ALL API routes (including /track-event)
   if (req.path.startsWith('/api/')) {
@@ -104,7 +104,7 @@ exports.trackVisitor = async (req, res, next) => {
         clicks: 0,
       },
       events: [],
-      timestamp: new Date(), // ← Add timestamp for daily aggregation
+      timestamp: new Date(), 
     };
 
     const newVisitor = await Visitor.create(visitorData);
