@@ -19,10 +19,18 @@ exports.getDashboardStats = async (req, res) => {
     const totalEvents = eventsResult[0]?.total || 0;
     console.log('📊 Total events:', totalEvents);
 
+    // Get today's visitors
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayVisitors = await Visitor.countDocuments({
+      createdAt: { $gte: today }
+    });
+
     res.json({
       totalVisitors,
       uniqueVisitors,
       totalEvents,
+      todayVisitors
     });
   } catch (error) {
     console.error('❌ Stats error:', error);
@@ -38,7 +46,7 @@ exports.getVisitors = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const visitors = await Visitor.find()
-      .sort({ timestamp: -1 })
+      .sort({ createdAt: -1 }) // Fixed: use createdAt instead of timestamp
       .skip(skip)
       .limit(limit);
 
@@ -65,6 +73,8 @@ exports.getPageAnalytics = async (req, res) => {
           _id: '$page.path',
           views: { $sum: 1 },
           uniqueVisitors: { $addToSet: '$sessionId' },
+          avgTimeOnPage: { $avg: '$engagement.timeOnPage' },
+          totalClicks: { $sum: '$engagement.clicks' }
         },
       },
       {
@@ -72,6 +82,8 @@ exports.getPageAnalytics = async (req, res) => {
           page: { $ifNull: ['$_id', '/'] },
           views: 1,
           uniqueVisitors: { $size: '$uniqueVisitors' },
+          avgTimeOnPage: { $round: ['$avgTimeOnPage', 0] },
+          totalClicks: 1
         },
       },
       { $sort: { views: -1 } },
@@ -90,22 +102,25 @@ exports.getDailyVisitors = async (req, res) => {
     const days = parseInt(req.query.days) || 30;
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
+    startDate.setHours(0, 0, 0, 0);
 
     const dailyData = await Visitor.aggregate([
       {
         $match: {
-          timestamp: { $gte: startDate },
+          createdAt: { $gte: startDate }, // Fixed: use createdAt instead of timestamp
         },
       },
       {
         $group: {
           _id: {
-            year: { $year: '$timestamp' },
-            month: { $month: '$timestamp' },
-            day: { $dayOfMonth: '$timestamp' },
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' },
+            day: { $dayOfMonth: '$createdAt' },
           },
           visitors: { $sum: 1 },
           uniqueVisitors: { $addToSet: '$sessionId' },
+          totalTimeOnPage: { $sum: '$engagement.timeOnPage' },
+          totalClicks: { $sum: '$engagement.clicks' }
         },
       },
       {
@@ -119,6 +134,14 @@ exports.getDailyVisitors = async (req, res) => {
           },
           visitors: 1,
           uniqueVisitors: { $size: '$uniqueVisitors' },
+          avgTimeOnPage: { 
+            $cond: [
+              { $gt: ['$visitors', 0] },
+              { $round: [{ $divide: ['$totalTimeOnPage', '$visitors'] }, 0] },
+              0
+            ]
+          },
+          totalClicks: 1
         },
       },
       { $sort: { date: 1 } },
@@ -146,6 +169,7 @@ exports.getProjectViews = async (req, res) => {
           _id: '$events.target',
           views: { $sum: 1 },
           uniqueVisitors: { $addToSet: '$sessionId' },
+          totalTimeSpent: { $sum: '$engagement.timeOnPage' }
         },
       },
       {
@@ -153,6 +177,13 @@ exports.getProjectViews = async (req, res) => {
           project: { $ifNull: ['$_id', 'Unknown'] },
           views: 1,
           uniqueVisitors: { $size: '$uniqueVisitors' },
+          avgTimeSpent: { 
+            $cond: [
+              { $gt: ['$views', 0] },
+              { $round: [{ $divide: ['$totalTimeSpent', '$views'] }, 0] },
+              0
+            ]
+          }
         },
       },
       { $sort: { views: -1 } },
@@ -179,12 +210,16 @@ exports.getSocialClicks = async (req, res) => {
         $group: {
           _id: '$events.target',
           clicks: { $sum: 1 },
+          uniqueVisitors: { $addToSet: '$sessionId' },
+          lastClick: { $max: '$events.eventDate' }
         },
       },
       {
         $project: {
           platform: { $ifNull: ['$_id', 'Unknown'] },
           clicks: 1,
+          uniqueVisitors: { $size: '$uniqueVisitors' },
+          lastClick: 1
         },
       },
       { $sort: { clicks: -1 } },
@@ -215,7 +250,8 @@ exports.getProjectDetailedStats = async (req, res) => {
             project: '$events.target',
             type: '$events.type'
           },
-          count: { $sum: 1 }
+          count: { $sum: 1 },
+          uniqueVisitors: { $addToSet: '$sessionId' }
         }
       },
       {
@@ -226,14 +262,41 @@ exports.getProjectDetailedStats = async (req, res) => {
               $cond: [{ $eq: ['$_id.type', 'project_gallery_view'] }, '$count', 0]
             }
           },
+          galleryUniqueVisitors: {
+            $addToSet: {
+              $cond: [
+                { $eq: ['$_id.type', 'project_gallery_view'] },
+                '$uniqueVisitors',
+                []
+              ]
+            }
+          },
           githubClicks: {
             $sum: {
               $cond: [{ $eq: ['$_id.type', 'project_github_click'] }, '$count', 0]
             }
           },
+          githubUniqueVisitors: {
+            $addToSet: {
+              $cond: [
+                { $eq: ['$_id.type', 'project_github_click'] },
+                '$uniqueVisitors',
+                []
+              ]
+            }
+          },
           liveDemoClicks: {
             $sum: {
               $cond: [{ $eq: ['$_id.type', 'project_live_demo_click'] }, '$count', 0]
+            }
+          },
+          liveDemoUniqueVisitors: {
+            $addToSet: {
+              $cond: [
+                { $eq: ['$_id.type', 'project_live_demo_click'] },
+                '$uniqueVisitors',
+                []
+              ]
             }
           },
           totalInteractions: { $sum: '$count' }
@@ -243,8 +306,11 @@ exports.getProjectDetailedStats = async (req, res) => {
         $project: {
           project: '$_id',
           galleryViews: 1,
+          galleryUniqueVisitors: { $size: { $arrayElemAt: ['$galleryUniqueVisitors', 0] } },
           githubClicks: 1,
+          githubUniqueVisitors: { $size: { $arrayElemAt: ['$githubUniqueVisitors', 0] } },
           liveDemoClicks: 1,
+          liveDemoUniqueVisitors: { $size: { $arrayElemAt: ['$liveDemoUniqueVisitors', 0] } },
           totalInteractions: 1
         }
       },
@@ -255,6 +321,88 @@ exports.getProjectDetailedStats = async (req, res) => {
     res.json(projectStats);
   } catch (error) {
     console.error('❌ Detailed project stats error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get real-time visitors (last 5 minutes)
+exports.getRealtimeVisitors = async (req, res) => {
+  try {
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    
+    const realtime = await Visitor.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: fiveMinutesAgo }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          activeSessions: { $addToSet: '$sessionId' },
+          pageViews: { $sum: 1 },
+          totalClicks: { $sum: '$engagement.clicks' }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          activeVisitors: { $size: '$activeSessions' },
+          pageViews: 1,
+          totalClicks: 1
+        }
+      }
+    ]);
+
+    res.json(realtime[0] || { activeVisitors: 0, pageViews: 0, totalClicks: 0 });
+  } catch (error) {
+    console.error('❌ Realtime visitors error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get device analytics
+exports.getDeviceAnalytics = async (req, res) => {
+  try {
+    const deviceData = await Visitor.aggregate([
+      {
+        $group: {
+          _id: {
+            deviceType: '$device.deviceType',
+            browser: '$device.browser',
+            os: '$device.os'
+          },
+          count: { $sum: 1 },
+          uniqueVisitors: { $addToSet: '$sessionId' }
+        }
+      },
+      {
+        $group: {
+          _id: '$_id.deviceType',
+          devices: {
+            $push: {
+              browser: '$_id.browser',
+              os: '$_id.os',
+              count: '$count',
+              uniqueVisitors: { $size: '$uniqueVisitors' }
+            }
+          },
+          totalCount: { $sum: '$count' }
+        }
+      },
+      {
+        $project: {
+          deviceType: '$_id',
+          devices: 1,
+          totalCount: 1
+        }
+      },
+      { $sort: { totalCount: -1 } }
+    ]);
+
+    res.json(deviceData);
+  } catch (error) {
+    console.error('❌ Device analytics error:', error);
     res.status(500).json({ message: error.message });
   }
 };

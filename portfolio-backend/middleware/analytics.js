@@ -37,30 +37,81 @@ exports.trackVisitor = async (req, res, next) => {
 
     const actualPage = req.body.target || '/';
 
+    // Check for existing visit in the last 30 minutes for this session and page
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    
     const existingVisit = await Visitor.findOne({
       sessionId,
       'page.path': actualPage,
+      createdAt: { $gte: thirtyMinutesAgo }
     }).sort({ createdAt: -1 }).limit(1);
 
     if (existingVisit) {
-      const timeDiff = Date.now() - existingVisit.createdAt;
-      
-      if (timeDiff < 1800000) {
-        await Visitor.updateOne(
-          { _id: existingVisit._id },
-          {
-            $inc: {
-              'engagement.clicks': 1,
-              'engagement.timeOnPage': 5,
-            },
+      // Update existing visit instead of creating new one
+      await Visitor.updateOne(
+        { _id: existingVisit._id },
+        {
+          $inc: {
+            'engagement.timeOnPage': 5, // Add time spent
+            'engagement.clicks': 1,
+          },
+          $set: {
+            // Update timestamp to keep it fresh
+            updatedAt: new Date(),
+            // Update page title if changed
+            'page.title': req.headers['page-title'] || existingVisit.page.title,
           }
-        );
-        req.existingVisitorId = existingVisit._id; 
-        return next();
-      }
+        }
+      );
+      req.existingVisitorId = existingVisit._id;
+      return next();
     }
 
-    // Create new visitor record
+    // Check if there's ANY recent visit for this session (different page)
+    const anyRecentVisit = await Visitor.findOne({
+      sessionId,
+      createdAt: { $gte: thirtyMinutesAgo }
+    }).sort({ createdAt: -1 }).limit(1);
+
+    if (anyRecentVisit) {
+      // If session exists but on different page, create new page visit
+      // but link it to the same session
+      const visitorData = {
+        sessionId,
+        ipHash,
+        device: {
+          browser: uaResult.browser.name || 'Unknown',
+          os: uaResult.os.name || 'Unknown',
+          deviceType: uaResult.device.type || 'desktop',
+          screenSize: req.headers['screen-size'] || 'Unknown',
+        },
+        location: {
+          country: 'Unknown',
+          city: 'Unknown',
+          region: 'Unknown',
+          timezone: 'Unknown',
+        },
+        page: {
+          path: actualPage,
+          title: req.headers['page-title'] || 'Portfolio',
+          referrer: req.headers.referer || 'direct',
+        },
+        engagement: {
+          timeOnPage: 0,
+          scrollDepth: 0,
+          clicks: 1,
+        },
+        events: [],
+        // Link to previous session visit
+        sessionStartId: anyRecentVisit._id
+      };
+
+      const newVisitor = await Visitor.create(visitorData);
+      req.existingVisitorId = newVisitor._id;
+      return next();
+    }
+
+    // Create new visitor record (first visit or session expired)
     const visitorData = {
       sessionId,
       ipHash,
@@ -84,7 +135,7 @@ exports.trackVisitor = async (req, res, next) => {
       engagement: {
         timeOnPage: 0,
         scrollDepth: 0,
-        clicks: 0,
+        clicks: 1, // First click is the page view itself
       },
       events: [],
     };
@@ -111,22 +162,38 @@ exports.trackEvent = async (req, res) => {
     let visitorId = req.existingVisitorId;
     
     if (!visitorId) {
-      const latestVisitor = await Visitor.findOne({ sessionId }).sort({ createdAt: -1 });
+      // Get the most recent visit for this session (last 30 minutes)
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+      const latestVisitor = await Visitor.findOne({ 
+        sessionId,
+        createdAt: { $gte: thirtyMinutesAgo }
+      }).sort({ createdAt: -1 });
+      
       if (latestVisitor) visitorId = latestVisitor._id;
     }
 
     if (visitorId) {
-      await Visitor.updateOne(
-        { _id: visitorId },
-        {
-          $push: {
-            events: {
-              type: eventType,
-              target: target,
-              eventDate: new Date()
-            }
+      // For click events, also increment the click count
+      const updateObj = {
+        $push: {
+          events: {
+            type: eventType,
+            target: target,
+            eventDate: new Date()
           }
         }
+      };
+
+      // If it's a click event, increment clicks
+      if (eventType === 'click' || eventType === 'link_click') {
+        updateObj.$inc = {
+          'engagement.clicks': 1
+        };
+      }
+
+      await Visitor.updateOne(
+        { _id: visitorId },
+        updateObj
       );
     }
 

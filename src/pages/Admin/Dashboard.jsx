@@ -21,13 +21,16 @@ const Dashboard = () => {
     totalVisitors: 0,
     uniqueVisitors: 0,
     totalEvents: 0,
+    todayVisitors: 0
   });
   const [dailyData, setDailyData] = useState([]);
-  const [projectDetailedData, setProjectDetailedData] = useState([]); 
+  const [projectDetailedData, setProjectDetailedData] = useState([]);
   const [socialData, setSocialData] = useState([]);
   const [recentVisitors, setRecentVisitors] = useState([]);
+  const [pageAnalytics, setPageAnalytics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
   const token = localStorage.getItem('adminToken');
   const axiosInstance = axios.create({
@@ -38,32 +41,48 @@ const Dashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [statsRes, dailyRes, detailedRes, socialRes, visitorsRes] = await Promise.all([
+      const [
+        statsRes, 
+        dailyRes, 
+        detailedRes, 
+        socialRes, 
+        visitorsRes,
+        pageAnalyticsRes
+      ] = await Promise.all([
         axiosInstance.get('/analytics/stats'),
         axiosInstance.get('/analytics/daily-visitors?days=30'),
-        axiosInstance.get('/analytics/project-detailed-stats'), 
+        axiosInstance.get('/analytics/project-detailed-stats'),
         axiosInstance.get('/analytics/social-clicks'),
-        axiosInstance.get('/analytics/visitors?limit=25'), 
+        axiosInstance.get('/analytics/visitors?limit=25'),
+        axiosInstance.get('/analytics/page-analytics')
       ]);
 
-      // ✅ FIX: Format daily data properly
+      // Format daily data properly
       const formattedDailyData = Array.isArray(dailyRes.data) ? dailyRes.data.map(item => ({
-        date: item.date ? new Date(item.date).toLocaleDateString('en-US', { 
-          month: 'short', 
-          day: 'numeric' 
+        date: item.date ? new Date(item.date).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric'
         }) : 'Unknown',
         visitors: item.visitors || 0,
         uniqueVisitors: item.uniqueVisitors || 0,
+        avgTimeOnPage: item.avgTimeOnPage || 0
       })) : [];
 
-      setStats(statsRes.data);
+      setStats({
+        totalVisitors: statsRes.data.totalVisitors || 0,
+        uniqueVisitors: statsRes.data.uniqueVisitors || 0,
+        totalEvents: statsRes.data.totalEvents || 0,
+        todayVisitors: statsRes.data.todayVisitors || 0
+      });
       setDailyData(formattedDailyData);
-      setProjectDetailedData(detailedRes.data || []); 
+      setProjectDetailedData(detailedRes.data || []);
       setSocialData(socialRes.data || []);
       setRecentVisitors(visitorsRes.data?.visitors || []);
+      setPageAnalytics(pageAnalyticsRes.data || []);
+      setLastUpdated(new Date());
     } catch (err) {
       setError('Failed to load analytics data');
-      console.error(err);
+      console.error('Dashboard error:', err);
     } finally {
       setLoading(false);
     }
@@ -75,12 +94,12 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const COLORS = ['#00E5FF', '#0091EA', '#00E676', '#FFD740', '#FF5252'];
+  const COLORS = ['#00E5FF', '#0091EA', '#00E676', '#FFD740', '#FF5252', '#AB47BC', '#FF6D00'];
 
   // Filter out admin routes from recent visitors
   const filteredVisitors = recentVisitors.filter(v => {
     const path = v.page?.path;
-    return path !== '/admin/login' && path !== '/admin/dashboard';
+    return path !== '/admin/login' && path !== '/admin/dashboard' && path !== '/admin';
   });
 
   // Calculate total project interactions
@@ -92,13 +111,20 @@ const Dashboard = () => {
   const totalGithubClicks = projectDetailedData.reduce((sum, p) => sum + (p.githubClicks || 0), 0);
   const totalDemoClicks = projectDetailedData.reduce((sum, p) => sum + (p.liveDemoClicks || 0), 0);
 
-  // Format data specifically for the new Project breakdown Chart
+  // Format data for the Project breakdown Chart
   const formattedProjectChartData = projectDetailedData.map(p => ({
-    name: p.project,
+    name: p.project?.length > 20 ? p.project.substring(0, 20) + '...' : p.project || 'Unknown',
     Views: p.galleryViews || 0,
     GitHub: p.githubClicks || 0,
     Demo: p.liveDemoClicks || 0,
+    fullName: p.project || 'Unknown'
   })).slice(0, 5);
+
+  // Format social data for pie chart
+  const formattedSocialData = socialData.map(item => ({
+    ...item,
+    platform: item.platform || 'Unknown'
+  }));
 
   if (loading) {
     return (
@@ -127,7 +153,7 @@ const Dashboard = () => {
             </h1>
           </div>
           
-          <div className="flex items-center gap-6 bg-slate-900/50 px-4 py-2 rounded-lg border border-slate-800">
+          <div className="flex items-center gap-4 bg-slate-900/50 px-4 py-2 rounded-lg border border-slate-800">
             <div className="flex items-center gap-2">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00E676] opacity-75"></span>
@@ -135,6 +161,10 @@ const Dashboard = () => {
               </span>
               <span className="text-slate-400 text-xs font-mono font-medium">Live Feed</span>
             </div>
+            <span className="text-slate-600 text-xs">|</span>
+            <span className="text-slate-500 text-[10px] font-mono">
+              Updated: {lastUpdated.toLocaleTimeString()}
+            </span>
             <button
               onClick={() => {
                 localStorage.removeItem('adminToken');
@@ -177,6 +207,7 @@ const Dashboard = () => {
               </span>
             </div>
             <p className="text-3xl font-bold text-white mt-2 tracking-tight">{stats.uniqueVisitors.toLocaleString()}</p>
+            <p className="text-[10px] text-slate-500 mt-1 font-mono">Today: {stats.todayVisitors} new</p>
           </div>
 
           <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 rounded-xl p-6 transition-all hover:border-slate-700/60">
@@ -205,7 +236,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/*Daily Visitors Chart */}
+        {/* Daily Visitors Chart */}
         <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-6">
             <svg className="w-4 h-4 text-[#00E5FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -213,7 +244,7 @@ const Dashboard = () => {
             </svg>
             <h3 className="text-white font-mono text-sm font-semibold tracking-wider uppercase">Daily Traffic Trend</h3>
             {dailyData.length > 0 && (
-              <span className="ml-auto text-slate-500 text-xs">{dailyData.length} days</span>
+              <span className="ml-auto text-slate-500 text-xs">{dailyData.length} days tracked</span>
             )}
           </div>
           
@@ -270,7 +301,8 @@ const Dashboard = () => {
               <svg className="w-4 h-4 text-[#00E5FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
               </svg>
-              <h3 className="text-white font-mono text-sm font-semibold tracking-wider uppercase">Project Interactions Breakdown</h3>
+              <h3 className="text-white font-mono text-sm font-semibold tracking-wider uppercase">Project Interactions</h3>
+              <span className="ml-auto text-slate-500 text-[10px]">Top 5</span>
             </div>
             
             {formattedProjectChartData.length > 0 ? (
@@ -279,7 +311,12 @@ const Dashboard = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" opacity={0.2} horizontal={false} />
                   <XAxis type="number" tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={{ stroke: '#334155' }} />
                   <YAxis type="category" dataKey="name" tick={{ fill: '#e2e8f0', fontSize: 11 }} width={90} axisLine={{ stroke: '#334155' }} />
-                  <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '8px' }} />
+                  <Tooltip 
+                    contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '8px' }}
+                    formatter={(value, name, props) => {
+                      return [`${value} clicks`, name];
+                    }}
+                  />
                   <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '11px', fontFamily: 'monospace', paddingTop: '10px' }} />
                   <Bar dataKey="Views" stackId="a" fill="#00E5FF" radius={[0, 0, 0, 0]} barSize={12} />
                   <Bar dataKey="GitHub" stackId="a" fill="#00E676" radius={[0, 0, 0, 0]} barSize={12} />
@@ -300,6 +337,7 @@ const Dashboard = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5l1.5-1.5m3.033-7.364l1.5-1.5a4 4 0 00-5.656-5l-4 4a4 4 0 005.656 5.656l1.1-1.1" />
               </svg>
               <h3 className="text-white font-mono text-sm font-semibold tracking-wider uppercase">Social Distribution</h3>
+              <span className="ml-auto text-slate-500 text-[10px]">{formattedSocialData.reduce((sum, s) => sum + s.clicks, 0)} total</span>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 h-[260px]">
@@ -307,7 +345,7 @@ const Dashboard = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={socialData}
+                      data={formattedSocialData}
                       dataKey="clicks"
                       nameKey="platform"
                       cx="50%"
@@ -316,75 +354,136 @@ const Dashboard = () => {
                       outerRadius={75}
                       paddingAngle={4}
                     >
-                      {socialData.map((entry, index) => (
+                      {formattedSocialData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="#0f172a" strokeWidth={2} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '8px' }} />
+                    <Tooltip 
+                      contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '8px' }}
+                      formatter={(value, name) => [`${value} clicks`, name]}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
 
               <div className="w-full sm:w-1/2 space-y-2 overflow-y-auto max-h-[220px] pr-2">
-                {socialData.map((entry, index) => (
-                  <div key={entry.platform} className="flex items-center justify-between p-2 rounded-lg bg-slate-900/60 border border-slate-800/40">
+                {formattedSocialData.map((entry, index) => (
+                  <div key={entry.platform} className="flex items-center justify-between p-2 rounded-lg bg-slate-900/60 border border-slate-800/40 hover:bg-slate-800/40 transition-colors">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }}></span>
                       <span className="text-slate-200 text-xs font-mono font-medium truncate">{entry.platform}</span>
                     </div>
-                    <span className="text-slate-400 font-mono text-xs font-semibold pl-2">{entry.clicks} clicks</span>
+                    <span className="text-slate-400 font-mono text-xs font-semibold pl-2">{entry.clicks}</span>
                   </div>
                 ))}
-                {socialData.length === 0 && (
+                {formattedSocialData.length === 0 && (
                   <p className="text-slate-500 text-xs font-mono text-center sm:text-left">No click interactions recorded</p>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Full-width Row Filtered Recent Activity Logs */}
+          {/* Recent Activity Logs */}
           <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 rounded-xl p-6 lg:col-span-12">
             <div className="flex items-center gap-2 mb-6">
               <svg className="w-4 h-4 text-[#FFD740]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <h3 className="text-white font-mono text-sm font-semibold tracking-wider uppercase">Live Activity Logs</h3>
+              <h3 className="text-white font-mono text-sm font-semibold tracking-wider uppercase">Recent Activity Logs</h3>
+              <span className="ml-auto text-slate-500 text-[10px]">{filteredVisitors.length} sessions</span>
             </div>
             
             <div className="overflow-x-auto rounded-lg border border-slate-800/60">
               <table className="w-full text-left font-mono text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-900 text-slate-400 uppercase tracking-wider text-[10px] border-b border-slate-800">
-                    <th className="py-3 px-4">Browser / Environment</th>
+                    <th className="py-3 px-4">Browser</th>
                     <th className="py-3 px-4">Device</th>
-                    <th className="py-3 px-4">Endpoint Path</th>
-                    <th className="py-3 px-4 text-right">Timestamp</th>
+                    <th className="py-3 px-4">Page</th>
+                    <th className="py-3 px-4">Clicks</th>
+                    <th className="py-3 px-4 text-right">Time</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/40">
                   {filteredVisitors.slice(0, 10).map((v, i) => (
                     <tr key={i} className="hover:bg-slate-800/20 transition-colors">
-                      <td className="py-3 px-4 text-slate-200 font-medium">{v.device?.browser || 'Unknown'}</td>
+                      <td className="py-3 px-4 text-slate-200 font-medium">
+                        {v.device?.browser || 'Unknown'}
+                        <span className="block text-[9px] text-slate-500">{v.device?.os || ''}</span>
+                      </td>
                       <td className="py-3 px-4 text-slate-400">
                         <span className="px-2 py-0.5 bg-slate-800 text-slate-300 rounded text-[10px] uppercase tracking-wide">
                           {v.device?.deviceType || 'desktop'}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-[#00E5FF] font-semibold">{v.page?.path || '/'}</td>
+                      <td className="py-3 px-4">
+                        <span className="text-[#00E5FF] font-semibold truncate max-w-[150px] block">
+                          {v.page?.path || '/'}
+                        </span>
+                        {v.page?.title && (
+                          <span className="text-[9px] text-slate-500 block truncate max-w-[150px]">
+                            {v.page.title}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-slate-300">
+                        {v.engagement?.clicks || 0}
+                        <span className="text-[9px] text-slate-500 block">
+                          {v.engagement?.timeOnPage || 0}s on page
+                        </span>
+                      </td>
                       <td className="py-3 px-4 text-right text-slate-500">
-                        {new Date(v.timestamp || v.createdAt).toLocaleTimeString()}
+                        {new Date(v.createdAt || v.timestamp).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
                       </td>
                     </tr>
                   ))}
                   {filteredVisitors.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-slate-500 font-mono">
-                        No unique visitor sessions tracked matching filter requirements.
+                      <td colSpan={5} className="py-8 text-center text-slate-500 font-mono">
+                        No visitor sessions tracked yet. Start exploring your portfolio!
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          {/* Page Analytics Summary */}
+          <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 rounded-xl p-6 lg:col-span-12">
+            <div className="flex items-center gap-2 mb-6">
+              <svg className="w-4 h-4 text-[#AB47BC]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 className="text-white font-mono text-sm font-semibold tracking-wider uppercase">Top Pages</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {pageAnalytics.slice(0, 6).map((page, index) => (
+                <div key={index} className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/30 hover:border-slate-600/50 transition-colors">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[#00E5FF] font-mono text-sm font-semibold truncate">
+                      {page.page === '/' ? 'Home' : page.page}
+                    </span>
+                    <span className="text-slate-400 text-xs font-mono">{page.views} views</span>
+                  </div>
+                  <div className="flex gap-4 text-[10px] text-slate-500 font-mono">
+                    <span>👤 {page.uniqueVisitors || 0} unique</span>
+                    <span>⏱ {page.avgTimeOnPage || 0}s avg</span>
+                    <span>🖱 {page.totalClicks || 0} clicks</span>
+                  </div>
+                </div>
+              ))}
+              {pageAnalytics.length === 0 && (
+                <div className="col-span-full text-center text-slate-500 text-sm font-mono py-4">
+                  No page data available yet
+                </div>
+              )}
             </div>
           </div>
 
