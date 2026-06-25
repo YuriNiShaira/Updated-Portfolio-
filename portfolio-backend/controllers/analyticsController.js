@@ -3,21 +3,21 @@ const Visitor = require('../models/Visitor');
 // Get dashboard summary
 exports.getDashboardStats = async (req, res) => {
   try {
-    console.log('📊 Fetching dashboard stats...');
+    console.log('Fetching dashboard stats...');
     
     const totalVisitors = await Visitor.countDocuments();
-    console.log('📊 Total visitors:', totalVisitors);
+    console.log('Total visitors:', totalVisitors);
     
     const uniqueSessions = await Visitor.distinct('sessionId');
     const uniqueVisitors = uniqueSessions.length;
-    console.log('📊 Unique visitors:', uniqueVisitors);
+    console.log('Unique visitors:', uniqueVisitors);
     
     const eventsResult = await Visitor.aggregate([
-      { $unwind: '$events' },
+      { $unwind: { path: '$events', preserveNullAndEmptyArrays: true } },
       { $count: 'total' }
     ]);
     const totalEvents = eventsResult[0]?.total || 0;
-    console.log('📊 Total events:', totalEvents);
+    console.log('Total events:', totalEvents);
 
     res.json({
       totalVisitors,
@@ -25,7 +25,7 @@ exports.getDashboardStats = async (req, res) => {
       totalEvents,
     });
   } catch (error) {
-    console.error('❌ Stats error:', error);
+    console.error('Stats error:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -51,7 +51,7 @@ exports.getVisitors = async (req, res) => {
       total,
     });
   } catch (error) {
-    console.error('❌ Visitors error:', error);
+    console.error('Visitors error:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -79,7 +79,7 @@ exports.getPageAnalytics = async (req, res) => {
 
     res.json(analytics);
   } catch (error) {
-    console.error('❌ Page analytics error:', error);
+    console.error('Page analytics error:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -91,7 +91,7 @@ exports.getDailyVisitors = async (req, res) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    console.log('📊 Fetching daily data from:', startDate);
+    console.log('Fetching daily data from:', startDate);
 
     const dailyData = await Visitor.aggregate([
       {
@@ -129,10 +129,10 @@ exports.getDailyVisitors = async (req, res) => {
       { $sort: { date: 1 } },
     ]);
 
-    console.log('📊 Daily data found:', dailyData.length);
+    console.log('Daily data found:', dailyData.length);
     res.json(dailyData);
   } catch (error) {
-    console.error('❌ Daily visitors error:', error);
+    console.error('Daily visitors error:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -166,7 +166,7 @@ exports.getProjectViews = async (req, res) => {
 
     res.json(projectViews);
   } catch (error) {
-    console.error('❌ Project views error:', error);
+    console.error('Project views error:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -198,7 +198,7 @@ exports.getSocialClicks = async (req, res) => {
 
     res.json(socialData);
   } catch (error) {
-    console.error('❌ Social clicks error:', error);
+    console.error('Social clicks error:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -247,7 +247,7 @@ exports.getProjectDetailedStats = async (req, res) => {
       },
       {
         $project: {
-          project: '$_id',
+          project: { $ifNull: ['$_id', 'Unknown'] },
           galleryViews: 1,
           githubClicks: 1,
           liveDemoClicks: 1,
@@ -257,10 +257,10 @@ exports.getProjectDetailedStats = async (req, res) => {
       { $sort: { totalInteractions: -1 } }
     ]);
 
-    console.log('📊 Detailed project stats:', projectStats);
+    console.log('Detailed project stats:', projectStats);
     res.json(projectStats);
   } catch (error) {
-    console.error('❌ Detailed project stats error:', error);
+    console.error('Detailed project stats error:', error);
     res.status(500).json({ message: error.message });
   }
 };

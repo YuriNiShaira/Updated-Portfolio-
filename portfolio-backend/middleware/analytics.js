@@ -13,38 +13,44 @@ const getSessionId = (req, res) => {
   if (!sessionId) {
     sessionId = crypto.randomUUID();
     res.cookie('analytics_session', sessionId, {
-      maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
+      maxAge: 365 * 24 * 60 * 60 * 1000,
       httpOnly: true,
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
     });
+    console.log('New session cookie set:', sessionId);
   }
   return sessionId;
 };
 
-
+// Main tracking middleware
 exports.trackVisitor = async (req, res, next) => {
-  // Skip ALL API routes (including /track-event)
+  // ALWAYS ensure session cookie exists (even for API routes)
+  const sessionId = getSessionId(req, res);
+  
+  // Skip tracking for API routes, but cookie is already set
   if (req.path.startsWith('/api/')) {
+    console.log('API route, cookie set but skipping tracking:', req.path);
     return next();
   }
 
-  // Log every non-API request
-  console.log('📊 Tracking visitor:', req.path, req.method);
+  // Skip static assets
+  if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|json)$/)) {
+    return next();
+  }
+
+  console.log('Tracking visitor:', req.path, req.method);
 
   // Skip bots
   const userAgent = req.headers['user-agent'] || '';
   const botPatterns = /bot|crawler|spider|scraper|headless|vercel|aws|google|bing|yandex|slurp|duckduckgo|lighthouse|postman/i;
   
   if (botPatterns.test(userAgent)) {
-    console.log('🤖 Bot detected, skipping');
+    console.log('Bot detected, skipping');
     return next();
   }
 
   try {
-    const sessionId = getSessionId(req, res);
-    console.log('🆔 Session ID:', sessionId);
-
     const ip = req.ip || req.connection.remoteAddress || '0.0.0.0';
     const ipHash = hashIP(ip);
     
@@ -62,7 +68,7 @@ exports.trackVisitor = async (req, res, next) => {
     if (existingVisit) {
       const timeDiff = Date.now() - existingVisit.createdAt;
       
-      if (timeDiff < 30000) { // 30 seconds
+      if (timeDiff < 30000) {
         await Visitor.updateOne(
           { _id: existingVisit._id },
           {
@@ -72,7 +78,7 @@ exports.trackVisitor = async (req, res, next) => {
             },
           }
         );
-        console.log('🔄 Updated existing visit');
+        console.log('Updated existing visit');
         return next();
       }
     }
@@ -104,71 +110,38 @@ exports.trackVisitor = async (req, res, next) => {
         clicks: 0,
       },
       events: [],
-      timestamp: new Date(), 
+      timestamp: new Date(),
     };
 
     const newVisitor = await Visitor.create(visitorData);
-    console.log('✅ New visitor created:', newVisitor._id);
+    console.log('New visitor created:', newVisitor._id);
     next();
   } catch (error) {
-    console.error('❌ Analytics error:', error);
-    next(); 
+    console.error('Analytics error:', error);
+    next();
   }
 };
 
-// Track specific events (project views, social clicks, etc.)
+// Track specific events
 exports.trackEvent = async (req, res) => {
   try {
     const { eventType, target } = req.body;
     const sessionId = req.cookies?.analytics_session;
 
-    console.log('📊 Tracking event:', { eventType, target, sessionId });
+    console.log('Tracking event:', { eventType, target, sessionId });
 
     if (!sessionId) {
-      // Create a session if none exists
-      const newSessionId = crypto.randomUUID();
-      res.cookie('analytics_session', newSessionId, {
-        maxAge: 365 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-      });
-      
-      // Create a new visitor with this session
-      const newVisitor = new Visitor({
-        sessionId: newSessionId,
-        ipHash: 'anonymous',
-        device: { browser: 'Unknown', os: 'Unknown', deviceType: 'Unknown' },
-        page: { path: '/', title: 'Portfolio' },
-        events: [{
-          type: eventType,
-          target: target,
-          eventDate: new Date()
-        }],
-        timestamp: new Date()
-      });
-      await newVisitor.save();
-      console.log('✅ New visitor created from event');
-      return res.json({ success: true, created: true });
+      console.log('No session ID found, skipping event');
+      return res.status(400).json({ message: 'No session found' });
     }
 
-    // Find the latest visitor for this session
     let visitor = await Visitor.findOne({ sessionId }).sort({ createdAt: -1 });
     
     if (!visitor) {
-      // Create new visitor if none exists
-      visitor = new Visitor({
-        sessionId,
-        ipHash: 'anonymous',
-        device: { browser: 'Unknown', os: 'Unknown', deviceType: 'Unknown' },
-        page: { path: '/', title: 'Portfolio' },
-        events: [],
-        timestamp: new Date()
-      });
-      await visitor.save();
+      console.log('No visitor found for session, skipping event');
+      return res.status(404).json({ message: 'No visitor found' });
     }
 
-    // Add event to visitor
     await Visitor.updateOne(
       { _id: visitor._id },
       {
@@ -182,10 +155,10 @@ exports.trackEvent = async (req, res) => {
       }
     );
 
-    console.log('✅ Event saved:', eventType, target);
+    console.log('Event saved:', eventType, target);
     res.json({ success: true });
   } catch (error) {
-    console.error('❌ Event tracking error:', error);
+    console.error('Event tracking error:', error);
     res.status(500).json({ message: 'Error tracking event' });
   }
 };
