@@ -222,7 +222,7 @@ const Dashboard = () => {
 
           <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 rounded-xl p-6 transition-all hover:border-slate-700/60">
             <div className="flex justify-between items-start">
-              <p className="text-slate-400 text-xs font-mono tracking-widest uppercase">Interactions</p>
+              <p className="text-slate-400 text-xs font-mono tracking-widest uppercase">Viewed Projects</p>
               <span className="p-1.5 bg-slate-800/60 rounded-md text-[#FFD740]">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
               </span>
@@ -453,40 +453,6 @@ const Dashboard = () => {
               </table>
             </div>
           </div>
-
-          {/* Page Analytics Summary */}
-          <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 rounded-xl p-6 lg:col-span-12">
-            <div className="flex items-center gap-2 mb-6">
-              <svg className="w-4 h-4 text-[#AB47BC]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <h3 className="text-white font-mono text-sm font-semibold tracking-wider uppercase">Top Pages</h3>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {pageAnalytics.slice(0, 6).map((page, index) => (
-                <div key={index} className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/30 hover:border-slate-600/50 transition-colors">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[#00E5FF] font-mono text-sm font-semibold truncate">
-                      {page.page === '/' ? 'Home' : page.page}
-                    </span>
-                    <span className="text-slate-400 text-xs font-mono">{page.views} views</span>
-                  </div>
-                  <div className="flex gap-4 text-[10px] text-slate-500 font-mono">
-                    <span>👤 {page.uniqueVisitors || 0} unique</span>
-                    <span>⏱ {page.avgTimeOnPage || 0}s avg</span>
-                    <span>🖱 {page.totalClicks || 0} clicks</span>
-                  </div>
-                </div>
-              ))}
-              {pageAnalytics.length === 0 && (
-                <div className="col-span-full text-center text-slate-500 text-sm font-mono py-4">
-                  No page data available yet
-                </div>
-              )}
-            </div>
-          </div>
-
         </div>
       </div>
     </div>
