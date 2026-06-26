@@ -66,10 +66,10 @@ const projectsData = [
   },
   {
     id: 4,
-    title: 'Portfolio Analytics',
+    title: 'Portfolio with Analytics',
     desc: 'A full-stack MERN analytics dashboard that tracks real-time visitor data, project views, and engagement metrics for my developer portfolio. Built with MongoDB, Express, React, and Node.js.',
     tech: ['React', 'Node.js', 'Express', 'MongoDB', 'Mongoose', 'JWT', 'Recharts', 'Tailwind CSS'],
-    images: ['analytics1.jpg', 'analytics2.jpg', 'analytics3.jpg', 'analytics4.jpg', 'analytics5.jpg'],
+    images: ['analytics1.jpg', 'analytics2.jpg', 'analytics3.jpg',],
     github: 'https://github.com/YuriNiShaira/portfolio-analytics',
     liveDemo: 'https://portfolioniyurisho.vercel.app',
     features: [
@@ -77,7 +77,7 @@ const projectsData = [
       'Interactive data visualizations using Recharts (daily visitors, page views)',
       'Event tracking for project views, resume downloads, and social media clicks',
       'MongoDB aggregation pipelines for analytics processing',
-      'Full-stack MERN deployment on Vercel + Render'
+      'EmailJS integration for handling contact form submissions and notifications'
     ]
   },
   {
