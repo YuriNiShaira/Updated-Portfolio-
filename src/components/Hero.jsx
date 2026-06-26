@@ -4,7 +4,7 @@ const Hero = () => {
   return (
     <section id="home" className="min-h-[100dvh] w-full flex flex-col items-center justify-center px-6 relative overflow-hidden z-10">
       
-      {/* Holographic tech icons (UNTOUCHED) */}
+      {/* Holographic tech icons */}
       <div className="tech-icon tech-icon-1 opacity-20 hover:opacity-100 transition-opacity duration-500"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" className="w-16 h-16 md:w-20 md:h-20 drop-shadow-[0_0_10px_rgba(0,229,255,0.5)]" alt="Python" /></div>
       <div className="tech-icon tech-icon-2 opacity-20 hover:opacity-100 transition-opacity duration-500"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/django/django-plain.svg" className="w-16 h-16 md:w-20 md:h-20 filter invert drop-shadow-[0_0_10px_rgba(0,229,255,0.5)]" alt="Django" /></div>
       <div className="tech-icon tech-icon-3 opacity-20 hover:opacity-100 transition-opacity duration-500"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" className="w-16 h-16 md:w-20 md:h-20 drop-shadow-[0_0_10px_rgba(0,229,255,0.5)]" alt="React" /></div>
@@ -12,11 +12,11 @@ const Hero = () => {
       <div className="tech-icon tech-icon-5 opacity-20 hover:opacity-100 transition-opacity duration-500"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" className="w-16 h-16 md:w-20 md:h-20 drop-shadow-[0_0_10px_rgba(0,229,255,0.5)]" alt="PostgreSQL" /></div>
       <div className="tech-icon tech-icon-6 opacity-20 hover:opacity-100 transition-opacity duration-500"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" className="w-16 h-16 md:w-20 md:h-20 drop-shadow-[0_0_10px_rgba(0,229,255,0.5)]" alt="TypeScript" /></div>
 
-      {/* Ambient background glows (UNTOUCHED) */}
+      {/* Ambient background glows  */}
       <div className="absolute top-20 left-10 w-72 h-72 bg-[#00E5FF]/5 rounded-full blur-3xl animate-pulse pointer-events-none"></div>
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#00E5FF]/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDelay: '1s' }}></div>
 
-      {/* Main Content Container - STYLED & OPTIMIZED */}
+      {/* Main Content Container */}
       <div className="max-w-7xl mx-auto text-center relative z-10 mb-16 md:mb-20">
         
         {/* Simple, Professional Badge */}
@@ -57,7 +57,7 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* Scroll Down Indicator (UNTOUCHED) */}
+      {/* Scroll Down Indicator  */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 hidden md:block">
         <a href="#about" className="flex flex-col items-center text-gray-500 hover:text-[#00E5FF] transition-colors group">
           <span className="text-xs tracking-widest uppercase mb-2">Scroll</span>

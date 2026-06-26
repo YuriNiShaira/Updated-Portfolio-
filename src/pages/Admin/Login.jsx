@@ -15,24 +15,39 @@ const Login = ({ onLogin }) => {
     setLoading(true);
     setError('');
 
-    const apiUrl = import.meta.env.VITE_API_URL;
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
     try {
       const response = await axios.post(
         `${apiUrl}/auth/login`,
         { email, password },
-        { withCredentials: true }
+        { 
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
       );
       
       const { token, admin } = response.data;
-      localStorage.setItem('adminToken', token);
-      localStorage.setItem('adminEmail', admin.email);
       
-      onLogin(token);
+      localStorage.setItem('adminToken', token);
+      localStorage.setItem('adminEmail', admin?.email || email);
+      
+      if (onLogin) {
+        onLogin(token);
+      }
+      
       navigate('/admin/dashboard');
       
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      if (err.response) {
+        setError(err.response.data?.message || `Server error: ${err.response.status}`);
+      } else if (err.request) {
+        setError('Cannot connect to server. Please check your connection.');
+      } else {
+        setError(err.message || 'Login failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -41,7 +56,6 @@ const Login = ({ onLogin }) => {
   return (
     <div className="min-h-screen bg-[#030712] flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-[#0B1B2E]/80 backdrop-blur-xl border border-[#00E5FF]/30 rounded-sm p-8 shadow-[0_0_50px_rgba(0,229,255,0.1)]">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-2">
             <span className="w-8 h-[1px] bg-[#00E5FF]/50"></span>
@@ -54,7 +68,6 @@ const Login = ({ onLogin }) => {
           <p className="text-gray-500 text-sm mt-2 font-mono">Enter credentials to access analytics</p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-xs font-mono tracking-widest uppercase text-gray-400 mb-2">
@@ -67,6 +80,7 @@ const Login = ({ onLogin }) => {
               className="w-full px-4 py-3 bg-[#030712]/50 border border-gray-700 rounded-sm focus:outline-none focus:border-[#00E5FF] text-gray-200 font-mono transition-all"
               placeholder="your@email.com"
               required
+              autoComplete="email"
             />
           </div>
 
@@ -81,12 +95,13 @@ const Login = ({ onLogin }) => {
               className="w-full px-4 py-3 bg-[#030712]/50 border border-gray-700 rounded-sm focus:outline-none focus:border-[#00E5FF] text-gray-200 font-mono transition-all"
               placeholder="••••••••"
               required
+              autoComplete="current-password"
             />
           </div>
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-sm text-sm font-mono">
-              ⚠ {error}
+              {error}
             </div>
           )}
 
@@ -104,15 +119,14 @@ const Login = ({ onLogin }) => {
                 Authenticating...
               </span>
             ) : (
-              'Authenticate →'
+              'Authenticate ->'
             )}
           </button>
         </form>
 
-        {/* Footer */}
         <div className="mt-6 text-center">
           <p className="text-gray-600 text-xs font-mono">
-            🔒 Encrypted connection • JWT Auth • Session: 30d
+            Encrypted connection • JWT Auth • Session: 30d
           </p>
         </div>
       </div>
