@@ -66,10 +66,10 @@ const projectsData = [
   },
   {
     id: 4,
-    title: 'Portfolio with Analytics',
+    title: 'Portfolio w/ Analytics',
     desc: 'A full-stack MERN analytics dashboard that tracks real-time visitor data, project views, and engagement metrics for my developer portfolio. Built with MongoDB, Express, React, and Node.js.',
     tech: ['React', 'Node.js', 'Express', 'MongoDB', 'Mongoose', 'JWT', 'Recharts', 'Tailwind CSS'],
-    images: ['analytics1.jpg', 'analytics2.jpg', 'analytics3.jpg',],
+    images: ['analytics1.jpg', 'analytics3.jpg', 'analytics2.jpg',],
     github: 'https://github.com/YuriNiShaira/portfolio-analytics',
     liveDemo: 'https://portfolioniyurisho.vercel.app',
     features: [
@@ -95,18 +95,6 @@ const projectsData = [
   },
   {
     id: 6,
-    title: 'Social Web',
-    desc: 'A social media platform for developer communities with real‑time messaging, posts, likes, and comment threads.',
-    tech: ['React', 'Django', 'DRF', 'ChakraUI'],
-    images: ['hub1.jpg', 'hub2.jpg', 'hub3.jpg', 'hub4.jpg'],
-    github: 'https://github.com/YuriNiShaira/Simple-Social-Web',
-    features: [
-      'User profiles with follow/unfollow system',
-      'Post creation, likes, and nested comments',
-    ]
-  },
-  {
-    id: 7,
     title: 'Chatroom',
     desc: 'A lightweight AJAX‑powered chatroom that enables real‑time messaging without full page reloads.',
     tech: ['Django', 'HTML', 'SQLite', 'JavaScript', 'AJAX'],
@@ -119,21 +107,7 @@ const projectsData = [
     ]
   },
   {
-    id: 8,
-    title: 'E‑Commerce',
-    desc: 'A full‑featured online store with product catalog, shopping cart, order management, and mock payment integration.',
-    tech: ['Django', 'DRF', 'PostgreSQL', 'Stripe', 'Redis'],
-    images: ['shop1.jpg', 'shop2.jpg', 'shop3.jpg', 'shop4.jpg', 'shop5.jpg', 'shop6.jpg'],
-    github: 'https://github.com/YuriNiShaira/e-commerse-',
-    features: [
-      'Product catalog with search and filtering',
-      'Shopping cart and checkout simulation',
-      'Order history and admin dashboard',
-      'Mock Stripe payment flow'
-    ]
-  },
-  {
-    id: 9,
+    id: 7,
     title: 'To‑do List App',
     desc: 'A feature‑rich desktop task manager built with PyQt5 – add, complete, search, and persist tasks locally.',
     tech: ['Python', 'PyQt5', 'CSS'],
