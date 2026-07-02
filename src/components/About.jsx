@@ -43,7 +43,7 @@ const About = () => {
             <div className="pt-2">
               <p className="text-xs text-gray-500 uppercase tracking-widest mb-4">Core Competencies</p>
               <div className="flex flex-wrap gap-2.5">
-                {['Django/Flask', 'Fast API', 'API Development', 'JWT Auth', 'Database Design', 'Debugging', 'Problem Solver', 'Fast Learner', 'Continuous Learning', 'Adaptable', 'Friendly', 'Troubleshooting'].map(skill => (
+                {[ 'Backend Development', 'REST API Development', 'Authentication & Security', 'Database Design', 'Scalable Applications', 'API Integration', 'Debugging', 'Problem Solving', 'Clean Code', 'Continuous Learning', 'Adaptability', 'Troubleshooting'].map(skill => (
                   <span 
                     key={skill} 
                     className="px-4 py-1.5 bg-[#0B1B2E]/80 text-[#00E5FF] rounded-sm text-xs tracking-wide font-medium border border-[#00E5FF]/20 hover:bg-[#00E5FF]/10 hover:border-[#00E5FF]/50 transition-colors cursor-default"
@@ -79,8 +79,8 @@ const About = () => {
               </h4>
               <ul className="space-y-3 text-gray-400 font-light text-sm">
                 <li className="flex items-center"><span className="text-[#00E5FF] mr-3">▹</span> Web Development</li>
-                <li className="flex items-center"><span className="text-[#00E5FF] mr-3">▹</span> Advanced Web Technologies</li>
-                <li className="flex items-center"><span className="text-[#00E5FF] mr-3">▹</span> Automation</li>
+                <li className="flex items-center"><span className="text-[#00E5FF] mr-3">▹</span> IT Support & System Troubleshooting</li>
+                <li className="flex items-center"><span className="text-[#00E5FF] mr-3">▹</span> Software Development</li>
               </ul>
             </div>
 
@@ -91,7 +91,7 @@ const About = () => {
                 Target Roles
               </h4>
               <p className="text-gray-400 font-light text-sm leading-relaxed">
-                Open to entry-level opportunities where I can contribute to building secure, highly scalable systems.
+                Seeking entry-level opportunities where I can contribute to meaningful projects, expand my technical skills, and grow alongside an experienced team.
               </p>
             </div>
 
